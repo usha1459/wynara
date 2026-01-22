@@ -1,3 +1,4 @@
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -6,26 +7,35 @@ __pycache__/
 env/
 venv/
 ENV/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+.venv
+
+# Flask
+instance/
+.webassets-cache
+flask_session/
+
+# Database
 *.db
 *.sqlite
 *.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Vercel
+.vercel
+
+# Environment
 .env
+.env.local
+
+# Uploads (don't commit user uploads)
 uploads/
-instance/
+!uploads/.gitkeep
+
+# OS
 .DS_Store
-*.log
+Thumbs.db
