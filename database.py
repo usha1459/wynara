@@ -275,6 +275,7 @@ def init_db():
         print("✅ Database initialized successfully with WAL mode enabled!")
 
 # Database helper class
+# Database helper class
 class db:
     @staticmethod
     def execute_query(query, params=(), fetch_one=False, fetch_all=False):
@@ -283,15 +284,24 @@ class db:
             cursor = conn.cursor()
             cursor.execute(query, params)
             
+            # Determine if this is a write operation
+            is_write = query.strip().upper().startswith(('INSERT', 'UPDATE', 'DELETE', 'CREATE', 'ALTER', 'DROP'))
+            
             if fetch_one:
                 result = cursor.fetchone()
+                if is_write:
+                    conn.commit()
                 return dict(result) if result else None
             elif fetch_all:
                 results = cursor.fetchall()
+                if is_write:
+                    conn.commit()
                 return [dict(row) for row in results]
             else:
-                conn.commit()
-                return cursor.lastrowid
+                # For INSERT/UPDATE/DELETE operations
+                last_id = cursor.lastrowid
+                conn.commit()  # Commit BEFORE returning
+                return last_id
     
     @staticmethod
     def execute_many(query, params_list):

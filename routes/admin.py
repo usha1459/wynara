@@ -399,6 +399,9 @@ def create_student():
         address = sanitize_input(data.get('address', '').strip())
         domain_ids = data.get('domainIds', [])
         
+        print(f"📝 Creating student: {email}")
+        print(f"📝 Domains: {domain_ids}")
+        
         # Validation
         if not all([email, password, full_name, phone]):
             return jsonify({'error': 'Email, password, full name, and phone are required'}), 400
@@ -417,7 +420,34 @@ def create_student():
         )
         
         if existing_user:
-            return jsonify({'error': 'Email already registered'}), 400
+            # Check if user has a student profile
+            existing_student = db.execute_query(
+                'SELECT id FROM students WHERE user_id = ?',
+                (existing_user['id'],),
+                fetch_one=True
+            )
+            
+            if existing_student:
+                return jsonify({'error': 'Email already registered with a complete student profile'}), 400
+            else:
+                # User exists but no student profile - complete the registration
+                print(f"⚠️ Found orphaned user, completing registration...")
+                user_id = existing_user['id']
+                
+                # Update password in case it's different
+                password_hash = generate_password_hash(password)
+                db.execute_query(
+                    'UPDATE users SET password_hash = ?, is_verified = 1 WHERE id = ?',
+                    (password_hash, user_id)
+                )
+        else:
+            # Create new user account
+            password_hash = generate_password_hash(password)
+            user_id = db.execute_query(
+                'INSERT INTO users (email, password_hash, role, is_verified) VALUES (?, ?, ?, ?)',
+                (email, password_hash, 'student', 1)
+            )
+            print(f"✅ User created with ID: {user_id}")
         
         # Validate domains
         for domain_id in domain_ids:
@@ -429,41 +459,59 @@ def create_student():
             if not domain:
                 return jsonify({'error': f'Invalid or inactive domain selected'}), 400
         
-        # Create user account (verified and active)
-        password_hash = generate_password_hash(password)
-        user_id = db.execute_query(
-            'INSERT INTO users (email, password_hash, role, is_verified) VALUES (?, ?, ?, ?)',
-            (email, password_hash, 'student', 1)  # Already verified
-        )
-        
         # Generate WAPL ID
         wapl_id = generate_wapl_id()
+        print(f"✅ Generated WAPL ID: {wapl_id}")
         
-        # Create student record with ACTIVE status (admin-created = auto-approved)
-        student_id = db.execute_query(
-            '''INSERT INTO students 
-               (user_id, wapl_id, full_name, phone, address, account_status, registration_date)
-               VALUES (?, ?, ?, ?, ?, ?, ?)''',
-            (user_id, wapl_id, full_name, phone, address, 'active', datetime.now())
-        )
+        # Create student record
+        try:
+            # Try new schema with address
+            student_id = db.execute_query(
+                '''INSERT INTO students 
+                   (user_id, wapl_id, full_name, phone, address, account_status, registration_date)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                (user_id, wapl_id, full_name, phone, address or '', 'active', datetime.now())
+            )
+            print(f"✅ Student profile created with ID: {student_id}")
+        except Exception as schema_error:
+            print(f"⚠️ New schema failed, trying old schema: {schema_error}")
+            # Try old schema without address
+            student_id = db.execute_query(
+                '''INSERT INTO students 
+                   (user_id, wapl_id, full_name, phone, account_status, registration_date)
+                   VALUES (?, ?, ?, ?, ?, ?)''',
+                (user_id, wapl_id, full_name, phone, 'active', datetime.now())
+            )
+            print(f"✅ Student profile created with ID: {student_id} (old schema)")
         
         # Assign domains
-        for domain_id in domain_ids:
+        try:
+            for domain_id in domain_ids:
+                db.execute_query(
+                    "INSERT INTO student_domains (student_id, domain_id) VALUES (?, ?)",
+                    (student_id, domain_id)
+                )
+            print(f"✅ Assigned {len(domain_ids)} domains via junction table")
+        except Exception as domain_error:
+            print(f"⚠️ Junction table failed, using old domain_id column: {domain_error}")
+            # Fallback to old schema - single domain
             db.execute_query(
-                "INSERT INTO student_domains (student_id, domain_id) VALUES (?, ?)",
-                (student_id, domain_id)
+                "UPDATE students SET domain_id = ? WHERE id = ?",
+                (domain_ids[0], student_id)
             )
+            print(f"✅ Assigned domain {domain_ids[0]} via domain_id column")
         
-        print(f"✅ Student created by admin: {email} (WAPL ID: {wapl_id}) - Status: ACTIVE")
+        print(f"✅✅ Student created successfully: {email} (WAPL ID: {wapl_id})")
         
         return jsonify({
             'message': 'Student created successfully',
             'wapl_id': wapl_id,
-            'status': 'active'
+            'status': 'active',
+            'student_id': student_id
         }), 201
         
     except Exception as e:
-        print(f"Error creating student: {e}")
+        print(f"❌ Error creating student: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500

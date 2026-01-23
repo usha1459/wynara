@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HR Profile - WAPL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f7fa;
+}
+
+/* ===== Layout ===== */
+.hr-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+    width: 250px;
+    background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 20px 0;
+    position: fixed;
+    height: 100vh;
+}
+
+.logo {
+    padding: 0 20px 30px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 20px;
+}
+
+.logo h2 {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.nav-menu {
+    padding: 0 10px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 80px);
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    color: rgba(255,255,255,0.85);
+    text-decoration: none;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    transition: all 0.3s;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    text-align: left;
+}
+
+.nav-item:hover,
+.nav-item.active {
+    background: rgba(255,255,255,0.2);
+    color: white;
+}
+
+.nav-item.logout {
+    margin-top: auto;
+}
+
+/* ===== Main Content ===== */
+.main-content {
+    margin-left: 250px;
+    padding: 30px;
+    width: calc(100% - 250px);
+}
+
+.page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 22px 30px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 20px rgba(102,126,234,0.3);
+}
+
+.page-header h1 {
+    font-size: 28px;
+}
+
+/* ===== Profile Card ===== */
+.profile-section {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+}
+
+.profile-section h2 {
+    font-size: 22px;
+    margin-bottom: 25px;
+    border-bottom: 3px solid #667eea;
+    display: inline-block;
+    padding-bottom: 8px;
+}
+
+/* ===== Form ===== */
+.form-group {
+    margin-bottom: 22px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    font-size: 15px;
+    transition: all 0.3s;
+}
+
+.form-group input:disabled,
+.form-group textarea:disabled {
+    background: #f1f5f9;
+    cursor: not-allowed;
+}
+
+textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+/* ===== Buttons ===== */
+.actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 12px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-secondary {
+    background: #e5e7eb;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .sidebar { width: 70px; }
+    .main-content {
+        margin-left: 70px;
+        width: calc(100% - 70px);
+        padding: 15px;
+    }
+    .logo h2 { font-size: 18px; }
+    .nav-item span { display: none; }
+}
+</style>
+</head>
+
+<body>
+<div class="hr-container">
+
+<!-- ===== Sidebar ===== -->
+<aside class="sidebar">
+    <div class="logo">
+        <h2>🏢 WAPL HR</h2>
+    </div>
+    <nav class="nav-menu">
+        <a href="/hr/dashboard" class="nav-item">📊 <span>Dashboard</span></a>
+        <a href="/hr/profile" class="nav-item active">👤 <span>My Profile</span></a>
+        <a href="/hr/students" class="nav-item">👥 <span>Students</span></a>
+        <button onclick="logout()" class="nav-item logout"><span>Logout</span></button>
+    </nav>
+</aside>
+
+<!-- ===== Main ===== -->
+<main class="main-content">
+
+<div class="page-header">
+    <h1>HR Profile</h1>
+</div>
+
+<div class="profile-section">
+    <h2>Basic Information</h2>
+
+    <div class="form-group">
+        <label>Full Name</label>
+        <input id="full_name" disabled>
+    </div>
+
+    <div class="form-group">
+        <label>Email</label>
+        <input id="email" disabled>
+    </div>
+
+    <div class="form-group">
+        <label>Company Name</label>
+        <input id="company_name" disabled>
+    </div>
+
+    <div class="form-group">
+        <label>Company Website</label>
+        <input id="company_website" disabled>
+    </div>
+
+    <div class="form-group">
+        <label>Phone Number</label>
+        <input id="phone" disabled>
+    </div>
+
+    <div class="form-group">
+        <label>Company Address</label>
+        <textarea id="address" disabled></textarea>
+    </div>
+
+    <div class="actions">
+        <button class="btn btn-primary" id="editBtn" onclick="enableEdit()">Edit Profile</button>
+        <button class="btn btn-primary" id="saveBtn" onclick="saveProfile()" style="display:none;">Save Changes</button>
+        <button class="btn btn-secondary" id="cancelBtn" onclick="cancelEdit()" style="display:none;">Cancel</button>
+    </div>
+</div>
+
+</main>
+</div>
+
+<script>
+let originalData = {};
+
+function toggleFields(disabled) {
+    [
+        'full_name',
+        'email',
+        'company_name',
+        'company_website',
+        'phone',
+        'address'
+    ].forEach(id => {
+        document.getElementById(id).disabled = disabled;
+    });
+}
+
+function fillForm(data) {
+    full_name.value = data.full_name || '';
+    email.value = data.email || data.username || '';
+    company_name.value = data.company_name || data.company || '';
+    company_website.value = data.company_website || '';
+    phone.value = data.phone || '';
+    address.value = data.address || '';
+}
+
+function enableEdit() {
+    toggleFields(false);
+    editBtn.style.display = 'none';
+    saveBtn.style.display = 'inline-block';
+    cancelBtn.style.display = 'inline-block';
+}
+
+function cancelEdit() {
+    fillForm(originalData);
+    toggleFields(true);
+    editBtn.style.display = 'inline-block';
+    saveBtn.style.display = 'none';
+    cancelBtn.style.display = 'none';
+}
+
+async function loadProfile() {
+    const res = await fetch('/api/hr/profile');
+    const data = await res.json();
+    originalData = {...data};
+    fillForm(data);
+}
+
+async function saveProfile() {
+    await fetch('/api/hr/profile', {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            full_name: full_name.value,
+            email: email.value,
+            company_name: company_name.value,
+            company_website: company_website.value,
+            phone: phone.value,
+            address: address.value
+        })
+    });
+    toggleFields(true);
+    editBtn.style.display = 'inline-block';
+    saveBtn.style.display = 'none';
+    cancelBtn.style.display = 'none';
+    alert('Profile updated successfully');
+}
+
+async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
+}
+
+loadProfile();
+</script>
+</body>
+</html>

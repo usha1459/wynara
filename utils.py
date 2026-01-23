@@ -13,38 +13,51 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 from PIL import Image as PILImage, ImageDraw, ImageFont
 import base64
+import random
 
 def generate_otp(length=6):
     """Generate a random OTP"""
     return ''.join(secrets.choice(string.digits) for _ in range(length))
 
 def generate_wapl_id():
-    """Generate WAPL ID: WAPL + YEAR + 6-digit sequential number"""
-    from database import get_db_connection
+    """Generate unique WAPL ID in format WAPL2026XXXXXX"""
+    import sqlite3
+    from database import DB_NAME
     
-    current_year = datetime.now().year
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    # Get the last WAPL ID for this year
-    cursor.execute('''
-        SELECT wapl_id FROM students 
-        WHERE wapl_id LIKE ? 
-        ORDER BY id DESC LIMIT 1
-    ''', (f'WAPL{current_year}%',))
-    
-    last_record = cursor.fetchone()
-    conn.close()
-    
-    if last_record:
-        last_id = last_record[0]
-        # Extract the sequential number
-        seq_num = int(last_id[-6:])
-        new_seq = seq_num + 1
-    else:
-        new_seq = 1
-    
-    return f'WAPL{current_year}{new_seq:06d}'
+    conn = None
+    try:
+        # Connect directly
+        conn = sqlite3.connect(DB_NAME, timeout=30.0)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # Get the latest WAPL ID
+        cursor.execute("SELECT wapl_id FROM students ORDER BY id DESC LIMIT 1")
+        last_student = cursor.fetchone()
+        
+        if last_student and last_student['wapl_id']:
+            # Extract number from last WAPL ID (e.g., WAPL2026000001 -> 1)
+            last_number = int(last_student['wapl_id'][-6:])
+            new_number = last_number + 1
+        else:
+            new_number = 1
+        
+        # Format: WAPL + YEAR + 6-digit number
+        year = datetime.now().year
+        wapl_id = f"WAPL{year}{new_number:06d}"
+        
+        return wapl_id
+        
+    except Exception as e:
+        print(f"Error generating WAPL ID: {e}")
+        # Fallback to random number if database query fails
+        year = datetime.now().year
+        random_num = random.randint(1, 999999)
+        return f"WAPL{year}{random_num:06d}"
+    finally:
+        if conn:
+            conn.close()
+
 
 def generate_certificate_id():
     """Generate certificate unique ID: CERT + timestamp + 6-char random string"""

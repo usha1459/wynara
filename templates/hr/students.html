@@ -1,178 +1,215 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HR Students - WAPL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-{% block title %}Students - WAPL{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/hr/students.css') }}">
-{% endblock %}
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',Tahoma; background:#f5f7fa; }
 
-{% block navbar %}
-<nav class="navbar">
-    <div class="container">
-        <a href="{% if current_user and current_user.role == 'admin' %}/secure-admin-panel-wapl/dashboard{% elif current_user and current_user.role == 'hr' %}/hr/dashboard{% else %}/student/dashboard{% endif %}" class="navbar-brand" title="Home">
-            <video class="logo-video" autoplay loop muted playsinline>
-                <source src="/uploads/pics/logo.mp4" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-        </a>
-        <div class="navbar-menu">
-            <a href="/hr/dashboard">Dashboard</a>
-            <a href="/hr/students">Students</a>
-            <button onclick="logout()" class="btn btn-link">Logout</button>
-        </div>
-    </div>
-</nav>
-{% endblock %}
+.container { display:flex; min-height:100vh; }
 
-{% block content %}
-<div class="students-container">
+/* ===== Sidebar (IDENTICAL TO DASHBOARD) ===== */
+.sidebar {
+    width:250px;
+    background:linear-gradient(180deg,#1e3c72,#2a5298);
+    color:white;
+    padding:20px 0;
+    position:fixed;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+}
+
+.logo {
+    padding:0 20px 30px;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+    margin-bottom:20px;
+}
+
+.logo h2 { font-size:24px; font-weight:bold; }
+
+.nav-menu {
+    padding:0 10px;
+    display:flex;
+    flex-direction:column;
+    flex:1;
+}
+
+.nav-menu a,
+.nav-menu button {
+    width:100%;
+    display:flex;
+    align-items:center;
+    padding:12px 20px;
+    color:rgba(255,255,255,0.85);
+    border-radius:8px;
+    margin-bottom:6px;
+    background:transparent;
+    border:none;
+    cursor:pointer;
+    font-size:14px;
+    text-decoration:none;
+}
+
+.nav-menu a.active,
+.nav-menu a:hover,
+.nav-menu button:hover {
+    background:rgba(255,255,255,0.2);
+    color:white;
+}
+
+.nav-menu button {
+    margin-top:auto;
+}
+
+/* ===== Main ===== */
+.main {
+    margin-left:250px;
+    padding:30px;
+    width:calc(100% - 250px);
+}
+
+.header {
+    padding:20px 30px;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    color:white;
+    border-radius:12px;
+    margin-bottom:30px;
+}
+
+.filters {
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+}
+
+.filters select,
+.filters input {
+    padding:10px;
+    border-radius:8px;
+    border:1px solid #ccc;
+}
+
+.students-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:20px;
+}
+
+.student-card {
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 2px 12px rgba(0,0,0,0.08);
+}
+
+.student-card img {
+    width:100%;
+    height:160px;
+    object-fit:cover;
+    border-radius:8px;
+    margin-bottom:10px;
+}
+
+.btn {
+    display:inline-block;
+    margin-top:10px;
+    padding:10px 18px;
+    border-radius:8px;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    color:white;
+    text-decoration:none;
+    font-weight:600;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<aside class="sidebar">
+    <div class="logo"><h2>🏢 WAPL HR</h2></div>
+    <nav class="nav-menu">
+        <a href="/hr/dashboard">📊 Dashboard</a>
+        <a href="/hr/profile">👤 Profile</a>
+        <a href="/hr/students" class="active">👥 Students</a>
+        <button onclick="logout()">🚪 Logout</button>
+    </nav>
+</aside>
+
+<main class="main">
+
+<div class="header">
     <h1>Assigned Students</h1>
-    
-    <div class="filters">
-        <select id="domainFilter">
-            <option value="">All Domains</option>
-        </select>
-        <input type="text" id="skillsFilter" placeholder="Filter by skills">
-        <button onclick="applyFilters()" class="btn btn-secondary">Filter</button>
-    </div>
-    
-    <div id="studentsList" class="students-grid">
-        <p>Loading students...</p>
-    </div>
+</div>
+
+<div class="filters">
+    <select id="domainFilter"><option value="">All Domains</option></select>
+    <input type="text" id="skillsFilter" placeholder="Filter by skills">
+    <button class="btn" onclick="applyFilters()">Filter</button>
+</div>
+
+<div id="studentsList" class="students-grid">
+    <p>Loading students...</p>
+</div>
+
+</main>
 </div>
 
 <script>
-let allStudents = [];
+let allStudents=[];
 
-async function loadDomains() {
-    try {
-        const response = await fetch('/api/domains/active');
-        const domains = await response.json();
-        const select = document.getElementById('domainFilter');
-        domains.forEach(domain => {
-            const option = document.createElement('option');
-            option.value = domain.id;
-            option.textContent = domain.domain_name;
-            select.appendChild(option);
-        });
-    } catch (error) {
-        console.error('Error loading domains:', error);
-    }
+async function loadDomains(){
+    const r=await fetch('/api/domains/active');
+    const d=await r.json();
+    const s=document.getElementById('domainFilter');
+    d.forEach(x=>{
+        const o=document.createElement('option');
+        o.value=x.id; o.textContent=x.domain_name;
+        s.appendChild(o);
+    });
 }
 
-async function loadStudents() {
-    try {
-        const response = await fetch('/api/hr/students');
-        const students = await response.json();
-        
-        if (response.ok) {
-            allStudents = students;
-            renderStudents(students);
-        } else {
-            document.getElementById('studentsList').innerHTML = '<p>Error loading students</p>';
-        }
-    } catch (error) {
-        document.getElementById('studentsList').innerHTML = '<p>Error loading students</p>';
-    }
+async function loadStudents(){
+    const r=await fetch('/api/hr/students');
+    const d=await r.json();
+    allStudents=d;
+    renderStudents(d);
 }
 
-function renderStudents(students) {
-    const container = document.getElementById('studentsList');
-    
-    if (students.length === 0) {
-        container.innerHTML = '<p>No students assigned</p>';
-        return;
-    }
-    
-    container.innerHTML = students.map(student => {
-        const statusClass = getStatusClass(student.recruitment_status || 'viewed');
-        const statusText = formatStatus(student.recruitment_status || 'viewed');
-        
-        return `
+function renderStudents(students){
+    const c=document.getElementById('studentsList');
+    if(!students.length){ c.innerHTML='<p>No students</p>'; return; }
+    c.innerHTML=students.map(s=>`
         <div class="student-card">
-            ${student.profile_pic ? `<img src="/${student.profile_pic}" alt="${student.full_name}" class="student-card-pic">` : `<div class="student-card-pic-placeholder">No Picture</div>`}
-            <div class="status-badge-small ${statusClass}">${statusText}</div>
-            <h3>${student.full_name}</h3>
-            <p><strong>WAPL ID:</strong> ${student.wapl_id}</p>
-            <p><strong>Domain:</strong> ${student.domain_name || 'N/A'}</p>
-            <p><strong>Email:</strong> ${student.email}</p>
-            <p><strong>Phone:</strong> ${student.phone || 'N/A'}</p>
-            ${student.skills && student.skills.length > 0 ? `<p><strong>Skills:</strong> ${student.skills.slice(0, 3).join(', ')}${student.skills.length > 3 ? '...' : ''}</p>` : ''}
-            <div class="student-card-actions">
-                <a href="/hr/student/${student.id}" class="btn btn-primary">View Profile</a>
-                ${student.resume ? `<button onclick="downloadResume(${student.id}, '${student.full_name}')" class="btn btn-secondary">Download Resume</button>` : ''}
-            </div>
+            ${s.profile_pic?`<img src="/${s.profile_pic}">`:''}
+            <h3>${s.full_name}</h3>
+            <p><b>WAPL ID:</b> ${s.wapl_id}</p>
+            <p><b>Email:</b> ${s.email}</p>
+            <a href="/hr/student/${s.id}" class="btn">View Profile</a>
         </div>
-        `;
-    }).join('');
+    `).join('');
 }
 
-function formatStatus(status) {
-    const statusMap = {
-        'viewed': 'Viewed',
-        'shortlisted': 'Shortlisted',
-        'interview_scheduled': 'Interview',
-        'selected': 'Selected',
-        'rejected': 'Rejected'
-    };
-    return statusMap[status] || status;
+function applyFilters(){
+    const d=domainFilter.value;
+    const k=skillsFilter.value;
+    let u='/api/hr/students/filter?';
+    if(d) u+=`domain_id=${d}&`;
+    if(k) u+=`skills=${encodeURIComponent(k)}`;
+    fetch(u).then(r=>r.json()).then(renderStudents);
 }
 
-function getStatusClass(status) {
-    const classMap = {
-        'viewed': 'status-viewed',
-        'shortlisted': 'status-shortlisted',
-        'interview_scheduled': 'status-interview',
-        'selected': 'status-selected',
-        'rejected': 'status-rejected'
-    };
-    return classMap[status] || '';
-}
-
-function applyFilters() {
-    const domainId = document.getElementById('domainFilter').value;
-    const skills = document.getElementById('skillsFilter').value;
-    
-    let url = '/api/hr/students/filter?';
-    if (domainId) url += `domain_id=${domainId}&`;
-    if (skills) url += `skills=${encodeURIComponent(skills)}`;
-    
-    fetch(url)
-        .then(res => res.json())
-        .then(students => {
-            renderStudents(students);
-        })
-        .catch(error => {
-            showToast('Error filtering students', 'error');
-        });
-}
-
-function downloadResume(studentId, studentName) {
-    try {
-        showLoading();
-        const link = document.createElement('a');
-        link.href = `/api/hr/student/${studentId}/resume/download`;
-        link.download = `${studentName}_resume`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        hideLoading();
-        showToast('Resume downloaded successfully', 'success');
-    } catch (error) {
-        hideLoading();
-        showToast('Error downloading resume', 'error');
-    }
-}
-
-async function logout() {
-    try {
-        await fetch('/api/auth/logout', { method: 'POST' });
-        window.location.href = '/login';
-    } catch (error) {
-        window.location.href = '/login';
-    }
+async function logout(){
+    await fetch('/api/auth/logout',{method:'POST'});
+    location.href='/login';
 }
 
 loadDomains();
 loadStudents();
 </script>
-{% endblock %}
+</body>
+</html>

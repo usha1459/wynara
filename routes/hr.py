@@ -336,6 +336,11 @@ def hr_dashboard():
     from flask import render_template
     return render_template('hr/dashboard.html')
 
+@hr_bp.route("/hr/profile")
+def hr_profile():
+    from flask import render_template
+    return render_template("hr/profile.html")
+
 @hr_bp.route('/hr/students')
 @require_hr_auth
 def hr_students():

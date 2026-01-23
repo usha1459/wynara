@@ -1,67 +1,229 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Dashboard - WAPL</title>
 
-{% block title %}HR Dashboard - WAPL{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/hr/dashboard.css') }}">
-{% endblock %}
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block navbar %}
-<nav class="navbar">
-    <div class="container">
-        <a href="{% if current_user and current_user.role == 'admin' %}/secure-admin-panel-wapl/dashboard{% elif current_user and current_user.role == 'hr' %}/hr/dashboard{% else %}/student/dashboard{% endif %}" class="navbar-brand" title="Home">
-            <video class="logo-video" autoplay loop muted playsinline>
-                <source src="/uploads/pics/logo.mp4" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-        </a>
-        <div class="navbar-menu">
-            <a href="/hr/dashboard">Dashboard</a>
-            <a href="/hr/students">Students</a>
-            <button onclick="logout()" class="btn btn-link">Logout</button>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+        }
+
+        /* ===== Layout ===== */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            padding: 20px 0;
+
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            padding: 0 20px 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+
+        .logo h2 {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .nav-menu {
+            padding: 0 10px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .nav-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .nav-item.logout {
+            margin-top: auto;
+        }
+
+        /* ===== Main ===== */
+        .main {
+            margin-left: 250px;
+            padding: 30px;
+            width: calc(100% - 250px);
+        }
+
+        .header {
+            padding: 20px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(102,126,234,0.3);
+        }
+
+        .header h1 {
+            font-size: 28px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        }
+
+        .card h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .actions {
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+
+            .main {
+                margin-left: 70px;
+                width: calc(100% - 70px);
+                padding: 15px;
+            }
+
+            .logo h2 {
+                font-size: 18px;
+            }
+
+            .nav-item span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <!-- ===== Sidebar ===== -->
+    <aside class="sidebar">
+        <div class="logo">
+            <h2>🏢 WAPL HR</h2>
         </div>
-    </div>
-</nav>
-{% endblock %}
 
-{% block content %}
-<div class="dashboard-container">
-    <h1>HR Dashboard</h1>
-    
-    <div class="dashboard-stats">
-        <div class="stat-card">
-            <h3 id="totalStudents">0</h3>
-            <p>Assigned Students</p>
+        <nav class="nav-menu">
+            <a href="/hr/dashboard" class="nav-item active">📊 <span>Dashboard</span></a>
+            <a href="/hr/profile" class="nav-item">👤 <span>My Profile</span></a>
+            <a href="/hr/students" class="nav-item">👥 <span>Students</span></a>
+
+            <button onclick="logout()" class="nav-item logout">
+                🚪 <span>Logout</span>
+            </button>
+        </nav>
+    </aside>
+
+    <!-- ===== Main ===== -->
+    <main class="main">
+        <div class="header">
+            <h1>HR Dashboard</h1>
         </div>
-    </div>
-    
-    <div class="dashboard-actions">
-        <a href="/hr/students" class="btn btn-primary">View All Students</a>
-    </div>
+
+        <div class="cards">
+            <div class="card">
+                <h3>Assigned Students</h3>
+                <div class="value" id="totalStudents">0</div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <a href="/hr/students" class="btn">View Students</a>
+        </div>
+    </main>
 </div>
 
 <script>
-async function loadStats() {
+async function loadDashboard() {
     try {
-        const response = await fetch('/api/hr/students');
-        const students = await response.json();
-        
-        if (response.ok) {
-            document.getElementById('totalStudents').textContent = students.length;
+        const res = await fetch('/api/hr/students');
+        const data = await res.json();
+        if (res.ok) {
+            document.getElementById('totalStudents').textContent = data.length;
         }
-    } catch (error) {
-        console.error('Error loading stats:', error);
+    } catch (e) {
+        console.error(e);
     }
 }
 
 async function logout() {
-    try {
-        await fetch('/api/auth/logout', { method: 'POST' });
-        window.location.href = '/login';
-    } catch (error) {
-        window.location.href = '/login';
-    }
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
 }
 
-loadStats();
+loadDashboard();
 </script>
-{% endblock %}
+</body>
+</html>

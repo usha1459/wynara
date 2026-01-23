@@ -1,35 +1,119 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Student Profile - HR</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-{% block title %}Student Details - WAPL{% endblock %}
-{% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/hr/student_detail.css') }}">
-{% endblock %}
 
-{% block navbar %}
-<nav class="navbar">
-    <div class="container">
-        <a href="{% if current_user and current_user.role == 'admin' %}/secure-admin-panel-wapl/dashboard{% elif current_user and current_user.role == 'hr' %}/hr/dashboard{% else %}/student/dashboard{% endif %}" class="navbar-brand" title="Home">
-            <video class="logo-video" autoplay loop muted playsinline>
-                <source src="/uploads/pics/logo.mp4" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-        </a>
-        <div class="navbar-menu">
-            <a href="/hr/dashboard">Dashboard</a>
-            <a href="/hr/students">Students</a>
-            <button onclick="logout()" class="btn btn-link">Logout</button>
-        </div>
-    </div>
-</nav>
-{% endblock %}
+<style>
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f7fa;
+}
 
-{% block content %}
-<div class="student-detail-container">
-    <a href="/hr/students" class="btn btn-secondary">← Back to Students</a>
-    
-    <div id="studentDetail">
-        <p>Loading student details...</p>
+.container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+    width: 250px;
+    background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 20px 0;
+    position: fixed;
+    height: 100vh;
+}
+
+.logo {
+    padding: 0 20px 30px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 20px;
+}
+
+.logo h2 {
+    font-size: 24px;
+}
+
+.nav-menu {
+    padding: 0 10px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 90px);
+}
+
+.nav-item {
+    padding: 12px 20px;
+    color: rgba(255,255,255,0.85);
+    text-decoration: none;
+    border-radius: 8px;
+    margin-bottom: 6px;
+}
+
+.nav-item:hover,
+.nav-item.active {
+    background: rgba(255,255,255,0.2);
+    color: white;
+}
+
+.nav-item.logout {
+    margin-top: auto;
+    border: none;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+}
+
+/* ===== Main ===== */
+.main {
+    margin-left: 250px;
+    padding: 30px;
+    width: calc(100% - 250px);
+}
+
+.page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 22px 30px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+}
+
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<!-- ===== Sidebar ===== -->
+<aside class="sidebar">
+    <div class="logo">
+        <h2>🏢 WAPL HR</h2>
     </div>
+    <nav class="nav-menu">
+        <a href="/hr/dashboard" class="nav-item">📊 Dashboard</a>
+        <a href="/hr/profile" class="nav-item">👤 My Profile</a>
+        <a href="/hr/students" class="nav-item active">👥 Students</a>
+        <button onclick="logout()" class="nav-item logout">🚪 Logout</button>
+    </nav>
+</aside>
+
+<!-- ===== Main ===== -->
+<main class="main">
+
+<div class="page-header">
+    <h1>Student Profile</h1>
+</div>
+
+<div id="studentDetail">
+    <p>Loading student details...</p>
+</div>
+
+</main>
 </div>
 
 <script>
@@ -37,249 +121,34 @@ const studentId = window.location.pathname.split('/').pop();
 let currentStatus = 'viewed';
 
 async function loadStudentDetail() {
-    try {
-        const response = await fetch(`/api/hr/student/${studentId}`);
-        const student = await response.json();
-        
-        if (response.ok) {
-            // Load recruitment status
-            const statusResponse = await fetch(`/api/hr/student/${studentId}/status`);
-            const statusData = await statusResponse.json();
-            currentStatus = statusData.status || 'viewed';
-            const currentNotes = statusData.notes || '';
-            
-            document.getElementById('studentDetail').innerHTML = `
-                <div class="student-detail-card">
-                    <div class="student-header">
-                        ${student.profile_pic ? `<img src="/${student.profile_pic}" alt="Profile Picture" class="profile-pic-large">` : `<div class="profile-pic-placeholder">No Picture</div>`}
-                        <h1>${student.full_name}</h1>
-                    </div>
-                    
-                    <div class="detail-section recruitment-status-section">
-                        <h2>Recruitment Status</h2>
-                        <div class="status-selector">
-                            <label for="statusSelect"><strong>Status:</strong></label>
-                            <select id="statusSelect" class="form-control" onchange="updateStatus()">
-                                <option value="viewed" ${currentStatus === 'viewed' ? 'selected' : ''}>Viewed</option>
-                                <option value="shortlisted" ${currentStatus === 'shortlisted' ? 'selected' : ''}>Shortlisted</option>
-                                <option value="interview_scheduled" ${currentStatus === 'interview_scheduled' ? 'selected' : ''}>Interview Scheduled</option>
-                                <option value="selected" ${currentStatus === 'selected' ? 'selected' : ''}>Selected</option>
-                                <option value="rejected" ${currentStatus === 'rejected' ? 'selected' : ''}>Rejected</option>
-                            </select>
-                        </div>
-                        <div class="status-notes">
-                            <label for="statusNotes"><strong>Notes:</strong></label>
-                            <textarea id="statusNotes" class="form-control" rows="3" placeholder="Add notes about this candidate...">${currentNotes}</textarea>
-                            <button onclick="saveNotes()" class="btn btn-primary" style="margin-top: 0.5rem;">Save Notes</button>
-                        </div>
-                        <div class="status-badge ${getStatusClass(currentStatus)}" id="statusBadge">${formatStatus(currentStatus)}</div>
-                    </div>
-                    
-                    <div class="detail-section">
-                        <h2>Basic Information</h2>
-                        <p><strong>WAPL ID:</strong> ${student.wapl_id}</p>
-                        <p><strong>Email:</strong> ${student.email}</p>
-                        <p><strong>Phone:</strong> ${student.phone || 'N/A'}</p>
-                        <p><strong>Domain:</strong> ${student.domain_name || 'N/A'}</p>
-                        <p><strong>Address:</strong> ${student.address || 'N/A'}</p>
-                    </div>
-                    
-                    ${student.education_details && student.education_details.length > 0 ? `
-                    <div class="detail-section">
-                        <h2>Education</h2>
-                        ${student.education_details.map(edu => `
-                            <div class="education-item">
-                                <p><strong>${edu.degree || 'N/A'}</strong> - ${edu.institution || 'N/A'} (${edu.year || 'N/A'})</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                    ` : ''}
-                    
-                    ${student.skills && student.skills.length > 0 ? `
-                    <div class="detail-section">
-                        <h2>Skills</h2>
-                        <div class="skills-list">
-                            ${student.skills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
-                        </div>
-                    </div>
-                    ` : ''}
-                    
-                    ${student.projects && student.projects.length > 0 ? `
-                    <div class="detail-section">
-                        <h2>Projects</h2>
-                        ${student.projects.map(proj => `
-                            <div class="project-item">
-                                <h3>${proj.name || 'Untitled Project'}</h3>
-                                <p>${proj.description || ''}</p>
-                                <p><strong>Technologies:</strong> ${proj.technologies || 'N/A'}</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                    ` : ''}
-                    
-                    ${student.resume ? `
-                    <div class="detail-section">
-                        <h2>Resume</h2>
-                        <a href="/${student.resume}" target="_blank" class="btn btn-primary">Download Resume</a>
-                    </div>
-                    ` : ''}
-                    
-                    ${student.certificate ? `
-                    <div class="detail-section">
-                        <h2>Certificate</h2>
-                        <p><strong>Certificate ID:</strong> ${student.certificate.certificate_unique_id}</p>
-                        <p><strong>Issue Date:</strong> ${student.certificate.issue_date.substring(0, 10)}</p>
-                        <p><strong>Expiry Date:</strong> ${student.certificate.expiry_date.substring(0, 10)}</p>
-                        <p><strong>Status:</strong> <span class="status-active">Active</span></p>
-                    </div>
-                    ` : `
-                    <div class="detail-section certificate-issuance-section">
-                        <h2>Issue Certificate</h2>
-                        <form id="certificateForm" onsubmit="issueCertificate(event)">
-                            <div class="form-group">
-                                <label for="certificateText"><strong>Certificate Text:</strong></label>
-                                <textarea id="certificateText" class="form-control" rows="4" placeholder="Enter certificate text or description of achievements..." required>The candidate has demonstrated strong hands-on ability and practical understanding of the subject through assessment and interview rounds. They showed excellent problem-solving capabilities and effective communication during technical discussions. The candidate meets the required standards for professional certification.</textarea>
-                            </div>
-                            <button type="submit" class="btn btn-success">Issue Certificate</button>
-                        </form>
-                    </div>
-                    `}
-                </div>
-            `;
-        } else {
-            document.getElementById('studentDetail').innerHTML = `
-                <div class="error-message">
-                    <p>${student.error || 'Student not found or not assigned to you'}</p>
-                </div>
-            `;
-        }
-    } catch (error) {
-        document.getElementById('studentDetail').innerHTML = `
-            <div class="error-message">
-                <p>Error loading student details</p>
-            </div>
-        `;
-    }
-}
+    const res = await fetch(`/api/hr/student/${studentId}`);
+    const student = await res.json();
 
-function formatStatus(status) {
-    const statusMap = {
-        'viewed': 'Viewed',
-        'shortlisted': 'Shortlisted',
-        'interview_scheduled': 'Interview Scheduled',
-        'selected': 'Selected',
-        'rejected': 'Rejected'
-    };
-    return statusMap[status] || status;
-}
-
-function getStatusClass(status) {
-    const classMap = {
-        'viewed': 'status-viewed',
-        'shortlisted': 'status-shortlisted',
-        'interview_scheduled': 'status-interview',
-        'selected': 'status-selected',
-        'rejected': 'status-rejected'
-    };
-    return classMap[status] || '';
-}
-
-async function updateStatus() {
-    const status = document.getElementById('statusSelect').value;
-    const notes = document.getElementById('statusNotes').value;
-    
-    try {
-        const response = await fetch(`/api/hr/student/${studentId}/status`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ status, notes })
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok) {
-            currentStatus = status;
-            document.getElementById('statusBadge').className = 'status-badge ' + getStatusClass(status);
-            document.getElementById('statusBadge').textContent = formatStatus(status);
-            showToast('Status updated successfully', 'success');
-        } else {
-            showToast(result.error || 'Failed to update status', 'error');
-        }
-    } catch (error) {
-        showToast('Error updating status', 'error');
-    }
-}
-
-async function saveNotes() {
-    const status = document.getElementById('statusSelect').value;
-    const notes = document.getElementById('statusNotes').value;
-    
-    try {
-        const response = await fetch(`/api/hr/student/${studentId}/status`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ status, notes })
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok) {
-            showToast('Notes saved successfully', 'success');
-        } else {
-            showToast(result.error || 'Failed to save notes', 'error');
-        }
-    } catch (error) {
-        showToast('Error saving notes', 'error');
-    }
-}
-
-async function issueCertificate(event) {
-    event.preventDefault();
-    
-    const certificateText = document.getElementById('certificateText').value;
-    
-    if (!certificateText.trim()) {
-        showToast('Please enter certificate text', 'error');
+    if (!res.ok) {
+        document.getElementById('studentDetail').innerHTML = '<p>Student not found</p>';
         return;
     }
-    
-    try {
-        const response = await fetch(`/api/hr/issue-certificate/${studentId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ certificate_text: certificateText })
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok) {
-            showToast('Certificate issued successfully!', 'success');
-            // Reload student details to show the new certificate
-            setTimeout(() => loadStudentDetail(), 1500);
-        } else {
-            showToast(result.error || 'Failed to issue certificate', 'error');
-        }
-    } catch (error) {
-        showToast('Error issuing certificate', 'error');
-        console.error('Error:', error);
-    }
+
+    const statusRes = await fetch(`/api/hr/student/${studentId}/status`);
+    const statusData = await statusRes.json();
+    currentStatus = statusData.status || 'viewed';
+
+    document.getElementById('studentDetail').innerHTML = `
+        <div class="student-detail-card">
+            <h2>${student.full_name}</h2>
+            <p><strong>Email:</strong> ${student.email}</p>
+            <p><strong>Phone:</strong> ${student.phone || 'N/A'}</p>
+            <p><strong>Domain:</strong> ${student.domain_name || 'N/A'}</p>
+        </div>
+    `;
 }
 
 async function logout() {
-    try {
-        await fetch('/api/auth/logout', { method: 'POST' });
-        window.location.href = '/login';
-    } catch (error) {
-        window.location.href = '/login';
-    }
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
 }
 
 loadStudentDetail();
 </script>
-{% endblock %}
+</body>
+</html>

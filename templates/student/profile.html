@@ -1,411 +1,1105 @@
-{% extends "base.html" %}
-
-{% block title %}Student Profile - WAPL{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/student/profile.css') }}">
-{% endblock %}
-
-{% block navbar %}
-<nav class="navbar">
-    <div class="container">
-        <a href="{% if current_user and current_user.role == 'admin' %}/secure-admin-panel-wapl/dashboard{% elif current_user and current_user.role == 'hr' %}/hr/dashboard{% else %}/student/dashboard{% endif %}" class="navbar-brand" title="Home">
-            <video class="logo-video" autoplay loop muted playsinline>
-                <source src="/uploads/pics/logo.mp4" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-        </a>
-        <div class="navbar-menu">
-            <a href="/student/dashboard">Dashboard</a>
-            <a href="/student/profile">Profile</a>
-            <a href="/student/certificate">Certificate</a>
-            <button onclick="logout()" class="btn btn-link">Logout</button>
-        </div>
-    </div>
-</nav>
-{% endblock %}
-
-{% block content %}
-<div class="profile-container">
-    <h1>My Profile</h1>
-    <div class="profile-section">
-        <h2>Account Status</h2>
-        <p id="accountStatusField">Loading...</p>
-    </div>
-    
-    <div class="profile-section">
-        <h2>Basic Information</h2>
-        <form id="profileForm">
-            <div class="form-group">
-                <label>Full Name</label>
-                <input type="text" id="full_name" required>
-            </div>
-            <div class="form-group">
-                <label>Phone</label>
-                <input type="tel" id="phone" required>
-            </div>
-            <div class="form-group">
-                <label>Address</label>
-                <textarea id="address" rows="3"></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">Save Changes</button>
-        </form>
-    </div>
-    
-    <div class="profile-section">
-        <h2>Profile Picture</h2>
-        <div id="profilePicContainer">
-            <img id="profilePic" src="" alt="Profile Picture" style="max-width: 200px; display: none; border-radius: 8px; margin-bottom: 15px;">
-            <div>
-                <input type="file" id="profilePicInput" accept="image/jpeg,image/jpg,image/png">
-            </div>
-            <div style="margin-top: 10px;">
-                <button onclick="uploadProfilePic()" class="btn btn-secondary">Upload Photo</button>
-                <button id="deletePhotoBtn" onclick="deleteProfilePic()" class="btn btn-danger" style="display: none;">Delete Photo</button>
-            </div>
-        </div>
-    </div>
-    
-    <div class="profile-section">
-        <h2>Resume</h2>
-        <div id="resumeContainer">
-            <a id="resumeLink" href="" target="_blank" style="display: none;">View Resume</a>
-            <div style="margin-top: 10px;">
-                <input type="file" id="resumeInput" accept=".pdf,.doc,.docx">
-            </div>
-            <div style="margin-top: 10px;">
-                <button onclick="uploadResume()" class="btn btn-secondary">Upload Resume</button>
-                <button id="deleteResumeBtn" onclick="deleteResume()" class="btn btn-danger" style="display: none;">Delete Resume</button>
-            </div>
-        </div>
-    </div>
-    
-    <div class="profile-section">
-        <h2>Education Details</h2>
-        <div id="educationContainer">
-            <button onclick="addEducation()" class="btn btn-secondary">Add Education</button>
-            <div id="educationList"></div>
-        </div>
-    </div>
-    
-    <div class="profile-section">
-        <h2>Skills</h2>
-        <div id="skillsContainer">
-            <input type="text" id="skillInput" placeholder="Enter skill and press Enter">
-            <div id="skillsList"></div>
-        </div>
-    </div>
-    
-    <div class="profile-section">
-        <h2>Projects</h2>
-        <div id="projectsContainer">
-            <button onclick="addProject()" class="btn btn-secondary">Add Project</button>
-            <div id="projectsList"></div>
-        </div>
-    </div>
-</div>
-
-<script>
-let educationData = [];
-let skillsData = [];
-let projectsData = [];
-
-async function loadProfile() {
-    try {
-        const response = await fetch('/api/student/profile');
-        const profile = await response.json();
-        
-        if (response.ok) {
-            // Render account status
-            const statusText = formatAccountStatus(profile.account_status);
-            const statusClass = getAccountClass(profile.account_status);
-            document.getElementById('accountStatusField').innerHTML = `<span class="status-badge-tiny ${statusClass}">${statusText}</span>`;
-
-            document.getElementById('full_name').value = profile.full_name || '';
-            document.getElementById('phone').value = profile.phone || '';
-            document.getElementById('address').value = profile.address || '';
-            
-            // Profile Picture
-            if (profile.profile_pic) {
-                document.getElementById('profilePic').src = '/' + profile.profile_pic;
-                document.getElementById('profilePic').style.display = 'block';
-                document.getElementById('deletePhotoBtn').style.display = 'inline-block';
-            } else {
-                document.getElementById('profilePic').style.display = 'none';
-                document.getElementById('deletePhotoBtn').style.display = 'none';
-            }
-            
-            // Resume
-            if (profile.resume) {
-                document.getElementById('resumeLink').href = '/' + profile.resume;
-                document.getElementById('resumeLink').style.display = 'block';
-                document.getElementById('deleteResumeBtn').style.display = 'inline-block';
-            } else {
-                document.getElementById('resumeLink').style.display = 'none';
-                document.getElementById('deleteResumeBtn').style.display = 'none';
-            }
-            
-            educationData = profile.education_details || [];
-            skillsData = profile.skills || [];
-            projectsData = profile.projects || [];
-            
-            renderEducation();
-            renderSkills();
-            renderProjects();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - WAPL Student</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-    } catch (error) {
-        showToast('Error loading profile', 'error');
-    }
-}
 
-function formatAccountStatus(status) {
-    const map = { pending: 'Pending', active: 'Active', suspended: 'Suspended', revoked: 'Revoked' };
-    return map[status] || (status ? status : 'Unknown');
-}
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+        }
 
-function getAccountClass(status) {
-    const map = { pending: 'status-viewed', active: 'status-selected', suspended: 'status-interview', revoked: 'status-rejected' };
-    return map[status] || '';
-}
+        .student-container {
+            display: flex;
+            min-height: 100vh;
+        }
 
-function renderEducation() {
-    const container = document.getElementById('educationList');
-    container.innerHTML = educationData.map((edu, idx) => `
-        <div class="education-item">
-            <input type="text" placeholder="Degree" value="${edu.degree || ''}" onchange="updateEducation(${idx}, 'degree', this.value)">
-            <input type="text" placeholder="Institution" value="${edu.institution || ''}" onchange="updateEducation(${idx}, 'institution', this.value)">
-            <input type="text" placeholder="Year" value="${edu.year || ''}" onchange="updateEducation(${idx}, 'year', this.value)">
-            <button onclick="removeEducation(${idx})" class="btn btn-danger btn-sm">Remove</button>
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .logo {
+            padding: 0 20px 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+
+        .logo h2 {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .nav-menu {
+            padding: 0 10px;
+        }
+
+        .nav-menu a,
+        .nav-menu button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: inherit;
+            text-align: left;
+        }
+
+        .nav-menu a:hover,
+        .nav-menu button:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .nav-menu a.active {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-weight: bold;
+        }
+
+        .nav-menu a i,
+        .nav-menu button i {
+            margin-right: 10px;
+            font-size: 18px;
+            font-style: normal;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+            width: calc(100% - 250px);
+        }
+
+        /* Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding: 20px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        /* Profile Sections */
+        .profile-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+
+        .profile-section h2 {
+            margin-bottom: 25px;
+            color: #1e293b;
+            font-size: 1.4rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 12px;
+            display: inline-block;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #334155;
+            font-size: 14px;
+            letter-spacing: 0.3px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+            font-family: inherit;
+            background: #ffffff;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            background: #ffffff;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            margin-right: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        /* Status Badge */
+        .status-badge-tiny {
+            display: inline-block;
+            padding: 8px 18px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-selected { background: #d4edda; color: #155724; }
+        .status-viewed { background: #fff3cd; color: #856404; }
+        .status-interview { background: #f8d7da; color: #721c24; }
+        .status-rejected { background: #f8d7da; color: #721c24; }
+
+        /* Education, Projects, Experience Cards */
+        .education-item,
+        .project-item,
+        .experience-item {
+            padding: 25px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .education-item:hover,
+        .project-item:hover,
+        .experience-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);
+        }
+
+        .education-item::before,
+        .project-item::before,
+        .experience-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px 0 0 12px;
+        }
+
+        .education-item input,
+        .project-item input,
+        .project-item textarea,
+        .experience-item input,
+        .experience-item textarea {
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 15px;
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: white;
+            font-family: inherit;
+        }
+
+        .education-item input:focus,
+        .project-item input:focus,
+        .project-item textarea:focus,
+        .experience-item input:focus,
+        .experience-item textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .education-item input::placeholder,
+        .project-item input::placeholder,
+        .project-item textarea::placeholder,
+        .experience-item input::placeholder,
+        .experience-item textarea::placeholder {
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .project-item textarea,
+        .experience-item textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .education-item .btn-danger,
+        .project-item .btn-danger,
+        .experience-item .btn-danger {
+            margin-top: 10px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        /* Skills Section */
+        #skillInput {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        #skillInput:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        #skillInput::placeholder {
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        #skillsList {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            min-height: 50px;
+        }
+
+        .skill-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .skill-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .skill-remove {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .skill-remove:hover {
+            background: rgba(255,255,255,0.5);
+            transform: rotate(90deg);
+        }
+
+        /* Profile Picture */
+        #profilePicContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        #profilePic {
+            max-width: 200px;
+            display: none;
+            border-radius: 12px;
+            border: 4px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+
+        #profilePic:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        input[type="file"] {
+            padding: 12px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 10px;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        input[type="file"]:hover {
+            border-color: #667eea;
+            background: #f1f5f9;
+        }
+
+        #resumeLink {
+            display: inline-block;
+            text-decoration: none;
+            margin-bottom: 15px;
+        }
+
+        /* Loading & Toast */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 30px 50px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f4f6;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 28px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 10000;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.success { 
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .toast.error { 
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+
+            .main-content {
+                margin-left: 70px;
+                width: calc(100% - 70px);
+                padding: 15px;
+            }
+
+            .logo h2 {
+                font-size: 18px;
+            }
+
+            .nav-menu a span,
+            .nav-menu button span {
+                display: none;
+            }
+
+            .profile-section {
+                padding: 20px;
+            }
+
+            .education-item,
+            .project-item,
+            .experience-item {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="student-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>🎓 WAPL Student</h2>
+            </div>
+            <nav class="nav-menu">
+                <a href="/student/dashboard">
+                    <i>📊</i> <span>Dashboard</span>
+                </a>
+                <a href="/student/profile" class="active">
+                    <i>👤</i> <span>My Profile</span>
+                </a>
+                <a href="/student/certificate">
+                    <i>📜</i> <span>Certificate</span>
+                </a>
+                <button onclick="logout()">
+                    <i>🚪</i> <span>Logout</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <div class="page-header">
+                <h1>My Profile</h1>
+            </div>
+
+            <!-- Profile Sections -->
+            <div class="profile-section">
+                <h2>Account Status</h2>
+                <p id="accountStatusField">Loading...</p>
+            </div>
+            
+            <div class="profile-section">
+                <h2>Basic Information</h2>
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="full_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" id="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Address</label>
+                        <textarea id="address" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+                </form>
+            </div>
+            
+            <div class="profile-section">
+                <h2>Profile Picture</h2>
+                <div id="profilePicContainer">
+                    <img id="profilePic" src="" alt="Profile Picture">
+                    <div>
+                        <input type="file" id="profilePicInput" accept="image/jpeg,image/jpg,image/png">
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button onclick="uploadProfilePic()" class="btn btn-secondary">📤 Upload Photo</button>
+                        <button id="deletePhotoBtn" onclick="deleteProfilePic()" class="btn btn-danger" style="display: none;">🗑️ Delete Photo</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="profile-section">
+                <h2>Resume</h2>
+                <div id="resumeContainer">
+                    <a id="resumeLink" href="" target="_blank" class="btn btn-secondary" style="display: none;">📄 View Resume</a>
+                    <div style="margin-top: 15px;">
+                        <input type="file" id="resumeInput" accept=".pdf,.doc,.docx">
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button onclick="uploadResume()" class="btn btn-secondary">📤 Upload Resume</button>
+                        <button id="deleteResumeBtn" onclick="deleteResume()" class="btn btn-danger" style="display: none;">🗑️ Delete Resume</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="profile-section">
+                <h2>Education Details</h2>
+                <div id="educationContainer">
+                    <button onclick="addEducation()" class="btn btn-secondary">➕ Add Education</button>
+                    <div id="educationList" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+            
+            <div class="profile-section">
+                <h2>Skills</h2>
+                <div id="skillsContainer">
+                    <input type="text" id="skillInput" placeholder="Enter skill and press Enter">
+                    <div id="skillsList"></div>
+                </div>
+            </div>
+            
+            <div class="profile-section">
+                <h2>Projects</h2>
+                <div id="projectsContainer">
+                    <button onclick="addProject()" class="btn btn-secondary">➕ Add Project</button>
+                    <div id="projectsList" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h2>Experience</h2>
+                <div id="experienceContainer">
+                    <button onclick="addExperience()" class="btn btn-secondary">➕ Add Experience</button>
+                    <div id="experienceList" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p style="color: #0f172a; font-weight: 600; text-align: center;">Loading...</p>
         </div>
-    `).join('');
-}
+    </div>
 
-function renderSkills() {
-    const container = document.getElementById('skillsList');
-    container.innerHTML = skillsData.map((skill, idx) => `
-        <span class="skill-tag">
-            ${skill}
-            <button onclick="removeSkill(${idx})" class="skill-remove">×</button>
-        </span>
-    `).join('');
-}
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
 
-function renderProjects() {
-    const container = document.getElementById('projectsList');
-    container.innerHTML = projectsData.map((proj, idx) => `
-        <div class="project-item">
-            <input type="text" placeholder="Project Name" value="${proj.name || ''}" onchange="updateProject(${idx}, 'name', this.value)">
-            <textarea placeholder="Description" onchange="updateProject(${idx}, 'description', this.value)">${proj.description || ''}</textarea>
-            <input type="text" placeholder="Technologies" value="${proj.technologies || ''}" onchange="updateProject(${idx}, 'technologies', this.value)">
-            <button onclick="removeProject(${idx})" class="btn btn-danger btn-sm">Remove</button>
-        </div>
-    `).join('');
-}
+    <script>
+        let educationData = [];
+        let skillsData = [];
+        let projectsData = [];
+        let experienceData = [];
 
-function addEducation() {
-    educationData.push({ degree: '', institution: '', year: '' });
-    renderEducation();
-}
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
 
-function updateEducation(idx, field, value) {
-    educationData[idx][field] = value;
-    saveProfile();
-}
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
 
-function removeEducation(idx) {
-    educationData.splice(idx, 1);
-    renderEducation();
-    saveProfile();
-}
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
 
-document.getElementById('skillInput').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        const skill = e.target.value.trim();
-        if (skill && !skillsData.includes(skill)) {
-            skillsData.push(skill);
-            renderSkills();
-            e.target.value = '';
+        async function loadProfile() {
+            try {
+                const response = await fetch('/api/student/profile');
+                const profile = await response.json();
+                
+                if (response.ok) {
+                    const statusText = formatAccountStatus(profile.account_status);
+                    const statusClass = getAccountClass(profile.account_status);
+                    document.getElementById('accountStatusField').innerHTML = `<span class="status-badge-tiny ${statusClass}">${statusText}</span>`;
+
+                    document.getElementById('full_name').value = profile.full_name || '';
+                    document.getElementById('phone').value = profile.phone || '';
+                    document.getElementById('address').value = profile.address || '';
+                    
+                    if (profile.profile_pic) {
+                        document.getElementById('profilePic').src = '/' + profile.profile_pic;
+                        document.getElementById('profilePic').style.display = 'block';
+                        document.getElementById('deletePhotoBtn').style.display = 'inline-block';
+                    } else {
+                        document.getElementById('profilePic').style.display = 'none';
+                        document.getElementById('deletePhotoBtn').style.display = 'none';
+                    }
+                    
+                    if (profile.resume) {
+                        document.getElementById('resumeLink').href = '/' + profile.resume;
+                        document.getElementById('resumeLink').style.display = 'inline-block';
+                        document.getElementById('deleteResumeBtn').style.display = 'inline-block';
+                    } else {
+                        document.getElementById('resumeLink').style.display = 'none';
+                        document.getElementById('deleteResumeBtn').style.display = 'none';
+                    }
+                    
+                    educationData = profile.education_details || [];
+                    skillsData = profile.skills || [];
+                    projectsData = profile.projects || [];
+                    experienceData = profile.experience_details || [];
+                    
+                    renderEducation();
+                    renderSkills();
+                    renderProjects();
+                    renderExperience();
+                }
+            } catch (error) {
+                showToast('Error loading profile', 'error');
+            }
+        }
+
+        function formatAccountStatus(status) {
+            const map = { pending: 'Pending', active: 'Active', suspended: 'Suspended', revoked: 'Revoked' };
+            return map[status] || (status ? status : 'Unknown');
+        }
+
+        function getAccountClass(status) {
+            const map = { pending: 'status-viewed', active: 'status-selected', suspended: 'status-interview', revoked: 'status-rejected' };
+            return map[status] || '';
+        }
+
+        /* Validation helpers */
+        function isEducationFilled(edu) {
+            return (edu.degree && edu.degree.trim()) ||
+                   (edu.institution && edu.institution.trim()) ||
+                   (edu.year && edu.year.trim());
+        }
+
+        function isProjectFilled(proj) {
+            return (proj.name && proj.name.trim()) ||
+                   (proj.description && proj.description.trim()) ||
+                   (proj.technologies && proj.technologies.trim());
+        }
+
+        function isExperienceFilled(exp) {
+            return (exp.role && exp.role.trim()) ||
+                   (exp.company && exp.company.trim()) ||
+                   (exp.from_date && exp.from_date.trim()) ||
+                   (exp.to_date && exp.to_date.trim()) ||
+                   (exp.description && exp.description.trim());
+        }
+        /* Education */
+        function renderEducation() {
+            const container = document.getElementById('educationList');
+            if (!educationData.length) {
+                container.innerHTML = '<div class="empty-state">No education details added yet.</div>';
+                return;
+            }
+            container.innerHTML = educationData.map((edu, idx) => `
+                <div class="education-item">
+                    <input type="text" placeholder="Degree (e.g., B.Tech in Computer Science)" value="${edu.degree || ''}" onchange="updateEducation(${idx}, 'degree', this.value)">
+                    <input type="text" placeholder="Institution (e.g., XYZ University)" value="${edu.institution || ''}" onchange="updateEducation(${idx}, 'institution', this.value)">
+                    <input type="text" placeholder="Year (e.g., 2024)" value="${edu.year || ''}" onchange="updateEducation(${idx}, 'year', this.value)">
+                    <button onclick="removeEducation(${idx})" class="btn btn-danger btn-sm">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        function addEducation() {
+            if (educationData.length && !isEducationFilled(educationData[educationData.length - 1])) {
+                showToast('Please fill the current education details before adding another.', 'error');
+                return;
+            }
+            educationData.push({ degree: '', institution: '', year: '' });
+            renderEducation();
+        }
+
+        function updateEducation(idx, field, value) {
+            educationData[idx][field] = value;
             saveProfile();
         }
-    }
-});
 
-function removeSkill(idx) {
-    skillsData.splice(idx, 1);
-    renderSkills();
-    saveProfile();
-}
-
-function addProject() {
-    projectsData.push({ name: '', description: '', technologies: '' });
-    renderProjects();
-}
-
-function updateProject(idx, field, value) {
-    projectsData[idx][field] = value;
-    saveProfile();
-}
-
-function removeProject(idx) {
-    projectsData.splice(idx, 1);
-    renderProjects();
-    saveProfile();
-}
-
-async function saveProfile() {
-    try {
-        await fetch('/api/student/profile', {
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                full_name: document.getElementById('full_name').value,
-                phone: document.getElementById('phone').value,
-                address: document.getElementById('address').value,
-                education_details: educationData,
-                skills: skillsData,
-                projects: projectsData
-            })
-        });
-    } catch (error) {
-        // Silent save
-    }
-}
-
-document.getElementById('profileForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    await saveProfile();
-    showToast('Profile updated successfully', 'success');
-});
-
-async function uploadProfilePic() {
-    const file = document.getElementById('profilePicInput').files[0];
-    if (!file) {
-        showToast('Please select a file', 'error');
-        return;
-    }
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    try {
-        showLoading();
-        const response = await fetch('/api/student/upload-photo', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const data = await response.json();
-        hideLoading();
-        
-        if (response.ok) {
-            showToast('Profile picture uploaded successfully', 'success');
-            loadProfile();
-        } else {
-            showToast(data.error || 'Upload failed', 'error');
+        function removeEducation(idx) {
+            educationData.splice(idx, 1);
+            renderEducation();
+            saveProfile();
         }
-    } catch (error) {
-        hideLoading();
-        showToast('Upload error', 'error');
-    }
-}
 
-async function deleteProfilePic() {
-    if (!confirm('Are you sure you want to delete your profile picture?')) {
-        return;
-    }
-    
-    try {
-        showLoading();
-        const response = await fetch('/api/student/delete-photo', {
-            method: 'DELETE'
+        /* Skills */
+        document.getElementById('skillInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const skill = e.target.value.trim();
+                if (skill && !skillsData.includes(skill)) {
+                    skillsData.push(skill);
+                    renderSkills();
+                    e.target.value = '';
+                    saveProfile();
+                }
+            }
         });
-        
-        const data = await response.json();
-        hideLoading();
-        
-        if (response.ok) {
-            showToast('Profile picture deleted successfully', 'success');
-            document.getElementById('profilePic').style.display = 'none';
-            document.getElementById('deletePhotoBtn').style.display = 'none';
-            document.getElementById('profilePicInput').value = '';
-        } else {
-            showToast(data.error || 'Delete failed', 'error');
+
+        function renderSkills() {
+            const container = document.getElementById('skillsList');
+            if (!skillsData.length) {
+                container.innerHTML = '<div class="empty-state">No skills added yet. Start by typing a skill above.</div>';
+                return;
+            }
+            container.innerHTML = skillsData.map((skill, idx) => `
+                <span class="skill-tag">
+                    ${skill}
+                    <button onclick="removeSkill(${idx})" class="skill-remove">×</button>
+                </span>
+            `).join('');
         }
-    } catch (error) {
-        hideLoading();
-        showToast('Delete error', 'error');
-    }
+
+        function removeSkill(idx) {
+            skillsData.splice(idx, 1);
+            renderSkills();
+            saveProfile();
+        }
+
+        /* Projects */
+        function renderProjects() {
+            const container = document.getElementById('projectsList');
+            if (!projectsData.length) {
+                container.innerHTML = '<div class="empty-state">No projects added yet.</div>';
+                return;
+            }
+            container.innerHTML = projectsData.map((proj, idx) => `
+                <div class="project-item">
+                    <input type="text" placeholder="Project Name (e.g., Internship Portal)" value="${proj.name || ''}" onchange="updateProject(${idx}, 'name', this.value)">
+                    <textarea placeholder="Description (what you built, your role, results)" onchange="updateProject(${idx}, 'description', this.value)">${proj.description || ''}</textarea>
+                    <input type="text" placeholder="Technologies (e.g., Python, Flask, MySQL)" value="${proj.technologies || ''}" onchange="updateProject(${idx}, 'technologies', this.value)">
+                    <button onclick="removeProject(${idx})" class="btn btn-danger btn-sm">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        function addProject() {
+            if (projectsData.length && !isProjectFilled(projectsData[projectsData.length - 1])) {
+                showToast('Please fill the current project details before adding another.', 'error');
+                return;
+            }
+            projectsData.push({ name: '', description: '', technologies: '' });
+            renderProjects();
+        }
+
+        function updateProject(idx, field, value) {
+            projectsData[idx][field] = value;
+            saveProfile();
+        }
+
+        function removeProject(idx) {
+            projectsData.splice(idx, 1);
+            renderProjects();
+            saveProfile();
+        }
+
+        /* Experience */
+        function renderExperience() {
+            const container = document.getElementById('experienceList');
+            if (!experienceData.length) {
+                container.innerHTML = '<div class="empty-state">No experience added yet.</div>';
+                return;
+            }
+            container.innerHTML = experienceData.map((exp, idx) => `
+                <div class="experience-item">
+                    <input type="text" placeholder="Role (e.g., Software Engineer)" 
+                        value="${exp.role || ''}" 
+                        onchange="updateExperience(${idx}, 'role', this.value)">
+                    <input type="text" placeholder="Company (e.g., ABC Pvt Ltd)" 
+                        value="${exp.company || ''}" 
+                        onchange="updateExperience(${idx}, 'company', this.value)">
+                    
+                    <div style="display:flex; gap:12px; margin-bottom:15px; flex-wrap:wrap;">
+                        <div style="flex:1; min-width:160px;">
+                            <input type="date" 
+                                value="${exp.from_date || ''}" 
+                                onchange="updateExperience(${idx}, 'from_date', this.value)" 
+                                title="From date">
+                        </div>
+                        <div style="flex:1; min-width:160px;">
+                            <input type="date" 
+                                value="${exp.to_date || ''}" 
+                                onchange="updateExperience(${idx}, 'to_date', this.value)" 
+                                title="To date">
+                        </div>
+                    </div>
+
+                    <textarea placeholder="Description (responsibilities, achievements)"
+                            onchange="updateExperience(${idx}, 'description', this.value)">${exp.description || ''}</textarea>
+                    <button onclick="removeExperience(${idx})" class="btn btn-danger btn-sm">Remove</button>
+                </div>
+            `).join('');
+        }
+
+
+        function addExperience() {
+            if (experienceData.length && !isExperienceFilled(experienceData[experienceData.length - 1])) {
+                showToast('Please fill the current experience details before adding another.', 'error');
+                return;
+            }
+            experienceData.push({ role: '', company: '', from_date: '', to_date: '', description: '' });
+            renderExperience();
 }
 
-async function uploadResume() {
-    const file = document.getElementById('resumeInput').files[0];
-    if (!file) {
-        showToast('Please select a file', 'error');
-        return;
-    }
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    try {
-        showLoading();
-        const response = await fetch('/api/student/upload-resume', {
-            method: 'POST',
-            body: formData
+        function isValidDateRange(from, to) {
+            if (!from || !to) return true; // only validate when both are filled
+            const fromD = new Date(from);
+            const toD = new Date(to);
+            if (isNaN(fromD.getTime()) || isNaN(toD.getTime())) return true;
+            return fromD <= toD;formatAccountStatus
+}
+        function isValidDateRange(from, to) {
+            if (!from || !to) return true; // only validate when both are filled
+            const fromD = new Date(from);
+            const toD = new Date(to);
+            if (isNaN(fromD.getTime()) || isNaN(toD.getTime())) return true;
+            return fromD <= toD;
+        }
+
+        function updateExperience(idx, field, value) {
+            experienceData[idx][field] = value;
+            saveProfile();
+        }
+
+        function removeExperience(idx) {
+            experienceData.splice(idx, 1);
+            renderExperience();
+            saveProfile();
+        }
+
+        /* Save profile */
+        async function saveProfile() {
+            try {
+                await fetch('/api/student/profile', {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        full_name: document.getElementById('full_name').value,
+                        phone: document.getElementById('phone').value,
+                        address: document.getElementById('address').value,
+                        education_details: educationData,
+                        skills: skillsData,
+                        projects: projectsData,
+                        experience_details: experienceData
+                    })
+                });
+            } catch (error) {
+                // Silent fail
+            }
+        }
+
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await saveProfile();
+            showToast('Profile updated successfully', 'success');
         });
-        
-        const data = await response.json();
-        hideLoading();
-        
-        if (response.ok) {
-            showToast('Resume uploaded successfully', 'success');
-            loadProfile();
-        } else {
-            showToast(data.error || 'Upload failed', 'error');
+
+        /* File upload/delete */
+        async function uploadProfilePic() {
+            const file = document.getElementById('profilePicInput').files[0];
+            if (!file) {
+                showToast('Please select a file', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                showLoading();
+                const response = await fetch('/api/student/upload-photo', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                hideLoading();
+                
+                if (response.ok) {
+                    showToast('Profile picture uploaded successfully', 'success');
+                    loadProfile();
+                } else {
+                    showToast(data.error || 'Upload failed', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                showToast('Upload error', 'error');
+            }
         }
-    } catch (error) {
-        hideLoading();
-        showToast('Upload error', 'error');
-    }
-}
 
-async function deleteResume() {
-    if (!confirm('Are you sure you want to delete your resume?')) {
-        return;
-    }
-    
-    try {
-        showLoading();
-        const response = await fetch('/api/student/delete-resume', {
-            method: 'DELETE'
-        });
-        
-        const data = await response.json();
-        hideLoading();
-        
-        if (response.ok) {
-            showToast('Resume deleted successfully', 'success');
-            document.getElementById('resumeLink').style.display = 'none';
-            document.getElementById('deleteResumeBtn').style.display = 'none';
-            document.getElementById('resumeInput').value = '';
-        } else {
-            showToast(data.error || 'Delete failed', 'error');
+        async function deleteProfilePic() {
+            if (!confirm('Are you sure you want to delete your profile picture?')) {
+                return;
+            }
+            
+            try {
+                showLoading();
+                const response = await fetch('/api/student/delete-photo', {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                hideLoading();
+                
+                if (response.ok) {
+                    showToast('Profile picture deleted successfully', 'success');
+                    document.getElementById('profilePic').style.display = 'none';
+                    document.getElementById('deletePhotoBtn').style.display = 'none';
+                    document.getElementById('profilePicInput').value = '';
+                } else {
+                    showToast(data.error || 'Delete failed', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                showToast('Delete error', 'error');
+            }
         }
-    } catch (error) {
-        hideLoading();
-        showToast('Delete error', 'error');
-    }
-}
 
-async function logout() {
-    try {
-        await fetch('/api/auth/logout', { method: 'POST' });
-        window.location.href = '/login';
-    } catch (error) {
-        window.location.href = '/login';
-    }
-}
+        async function uploadResume() {
+            const file = document.getElementById('resumeInput').files[0];
+            if (!file) {
+                showToast('Please select a file', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                showLoading();
+                const response = await fetch('/api/student/upload-resume', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                hideLoading();
+                
+                if (response.ok) {
+                    showToast('Resume uploaded successfully', 'success');
+                    loadProfile();
+                } else {
+                    showToast(data.error || 'Upload failed', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                showToast('Upload error', 'error');
+            }
+        }
 
-loadProfile();
-</script>
-{% endblock %}
+        async function deleteResume() {
+            if (!confirm('Are you sure you want to delete your resume?')) {
+                return;
+            }
+            
+            try {
+                showLoading();
+                const response = await fetch('/api/student/delete-resume', {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                hideLoading();
+                
+                if (response.ok) {
+                    showToast('Resume deleted successfully', 'success');
+                    document.getElementById('resumeLink').style.display = 'none';
+                    document.getElementById('deleteResumeBtn').style.display = 'none';
+                    document.getElementById('resumeInput').value = '';
+                } else {
+                    showToast(data.error || 'Delete failed', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                showToast('Delete error', 'error');
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/login';
+            } catch (error) {
+                window.location.href = '/login';
+            }
+        }
+
+        loadProfile();
+    </script>
+</body>
+</html>

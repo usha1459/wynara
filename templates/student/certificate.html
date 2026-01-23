@@ -1,85 +1,297 @@
-{% extends "base.html" %}
-
-{% block title %}Certificate - WAPL{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/student/certificate.css') }}">
-{% endblock %}
-
-{% block navbar %}
-<nav class="navbar">
-    <div class="container">
-        <a href="{% if current_user and current_user.role == 'admin' %}/secure-admin-panel-wapl/dashboard{% elif current_user and current_user.role == 'hr' %}/hr/dashboard{% else %}/student/dashboard{% endif %}" class="navbar-brand" title="Home">
-            <video class="logo-video" autoplay loop muted playsinline>
-                <source src="/uploads/pics/logo.mp4" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-        </a>
-        <div class="navbar-menu">
-            <a href="/student/dashboard">Dashboard</a>
-            <a href="/student/profile">Profile</a>
-            <a href="/student/certificate">Certificate</a>
-            <button onclick="logout()" class="btn btn-link">Logout</button>
-        </div>
-    </div>
-</nav>
-{% endblock %}
-
-{% block content %}
-<div class="certificate-container">
-    <h1>My Certificate</h1>
-    
-    <div id="certificateContent">
-        <p>Loading certificate...</p>
-    </div>
-</div>
-
-<script>
-async function loadCertificate() {
-    try {
-        const response = await fetch('/api/student/certificate');
-        const certificate = await response.json();
-        
-        if (response.ok) {
-            const expiryDate = new Date(certificate.expiry_date);
-            const isExpired = expiryDate < new Date();
-            
-            document.getElementById('certificateContent').innerHTML = `
-                <div class="certificate-card">
-                    <h2>Certificate Details</h2>
-                    <p><strong>Certificate ID:</strong> ${certificate.certificate_unique_id}</p>
-                    <p><strong>Issue Date:</strong> ${certificate.issue_date.substring(0, 10)}</p>
-                    <p><strong>Expiry Date:</strong> ${certificate.expiry_date.substring(0, 10)}</p>
-                    <p><strong>Status:</strong> <span class="${isExpired ? 'status-expired' : 'status-active'}">${isExpired ? 'Expired' : 'Active'}</span></p>
-                    ${!isExpired ? `
-                        <a href="/api/student/certificate/download" class="btn btn-primary">Download Certificate PDF</a>
-                    ` : '<p class="error-message">Your certificate has expired.</p>'}
-                </div>
-            `;
-        } else {
-            document.getElementById('certificateContent').innerHTML = `
-                <div class="certificate-card">
-                    <p class="error-message">${certificate.error || 'Certificate not found'}</p>
-                </div>
-            `;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Certificate - WAPL Student</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-    } catch (error) {
-        document.getElementById('certificateContent').innerHTML = `
-            <div class="certificate-card">
-                <p class="error-message">Error loading certificate</p>
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+        }
+
+        .student-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .logo {
+            padding: 0 20px 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+
+        .logo h2 {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .nav-menu {
+            padding: 0 10px;
+        }
+
+        .nav-menu a,
+        .nav-menu button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: inherit;
+            text-align: left;
+        }
+
+        .nav-menu a:hover,
+        .nav-menu button:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .nav-menu a.active {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-weight: bold;
+        }
+
+        .nav-menu a i,
+        .nav-menu button i {
+            margin-right: 10px;
+            font-size: 18px;
+            font-style: normal;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+            width: calc(100% - 250px);
+        }
+
+        /* Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding: 20px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        /* Certificate Container */
+        .certificate-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        }
+
+        .certificate-card {
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .certificate-card h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .certificate-card p {
+            margin: 12px 0;
+            font-size: 15px;
+            color: #555;
+        }
+
+        .certificate-card strong {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .status-active {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .status-expired {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .error-message {
+            color: #ef4444;
+            padding: 15px;
+            background: #fee2e2;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin-top: 15px;
+            margin-right: 10px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+
+            .main-content {
+                margin-left: 70px;
+                width: calc(100% - 70px);
+                padding: 15px;
+            }
+
+            .logo h2 {
+                font-size: 18px;
+            }
+
+            .nav-menu a span,
+            .nav-menu button span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="student-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>🎓 WAPL Student</h2>
             </div>
-        `;
-    }
-}
+            <nav class="nav-menu">
+                <a href="/student/dashboard">
+                    <i>📊</i> <span>Dashboard</span>
+                </a>
+                <a href="/student/profile">
+                    <i>👤</i> <span>My Profile</span>
+                </a>
+                <a href="/student/certificate" class="active">
+                    <i>📜</i> <span>Certificate</span>
+                </a>
+                <button onclick="logout()">
+                    <i>🚪</i> <span>Logout</span>
+                </button>
+            </nav>
+        </aside>
 
-async function logout() {
-    try {
-        await fetch('/api/auth/logout', { method: 'POST' });
-        window.location.href = '/login';
-    } catch (error) {
-        window.location.href = '/login';
-    }
-}
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <div class="page-header">
+                <h1>My Certificate</h1>
+            </div>
 
-loadCertificate();
-</script>
-{% endblock %}
+            <!-- Certificate Content -->
+            <div class="certificate-container">
+                <div id="certificateContent">
+                    <p>Loading certificate...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function loadCertificate() {
+            try {
+                const response = await fetch('/api/student/certificate');
+                const certificate = await response.json();
+                
+                if (response.ok) {
+                    const expiryDate = new Date(certificate.expiry_date);
+                    const isExpired = expiryDate < new Date();
+                    
+                    document.getElementById('certificateContent').innerHTML = `
+                        <div class="certificate-card">
+                            <h2>Certificate Details</h2>
+                            <p><strong>Certificate ID:</strong> ${certificate.certificate_unique_id}</p>
+                            <p><strong>Issue Date:</strong> ${certificate.issue_date.substring(0, 10)}</p>
+                            <p><strong>Expiry Date:</strong> ${certificate.expiry_date.substring(0, 10)}</p>
+                            <p><strong>Status:</strong> <span class="${isExpired ? 'status-expired' : 'status-active'}">${isExpired ? 'Expired' : 'Active'}</span></p>
+                            ${!isExpired ? `
+                                <a href="/api/student/certificate/download" class="btn btn-primary">📥 Download Certificate PDF</a>
+                            ` : '<p class="error-message">Your certificate has expired.</p>'}
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('certificateContent').innerHTML = `
+                        <div class="certificate-card">
+                            <p class="error-message">${certificate.error || 'Certificate not found'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('certificateContent').innerHTML = `
+                    <div class="certificate-card">
+                        <p class="error-message">Error loading certificate</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/login';
+            } catch (error) {
+                window.location.href = '/login';
+            }
+        }
+
+        loadCertificate();
+    </script>
+</body>
+</html>

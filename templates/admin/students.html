@@ -188,26 +188,6 @@
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-warning {
-            background-color: #ffc107;
-            color: #000;
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-
         /* Table */
         .table-container {
             overflow-x: auto;
@@ -230,6 +210,7 @@
         td {
             padding: 15px;
             border-bottom: 1px solid #e9ecef;
+            vertical-align: middle;
         }
 
         tr:hover {
@@ -260,58 +241,296 @@
             color: #721c24;
         }
 
-        .actions-cell {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
+        /* HR Assignment Badges */
+        .hr-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
         }
 
-        /* Dropdown for Assign HR */
-        .dropdown {
+        .hr-assigned {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .hr-not-assigned {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .btn-view {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-view:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-view svg {
+            flex-shrink: 0;
+        }
+
+        /* Dropdown */
+        .action-dropdown {
             position: relative;
             display: inline-block;
         }
 
-        .dropdown-content {
+        .action-menu-btn {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-menu-btn:hover {
+            background: #e2e8f0;
+            color: #334155;
+            border-color: #cbd5e1;
+        }
+
+        .action-menu {
             display: none;
             position: absolute;
-            background-color: white;
-            min-width: 250px;
-            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
-            z-index: 1000;
+            right: 0;
+            top: 100%;
+            margin-top: 6px;
+            background: white;
+            border: 1px solid #e2e8f0;
             border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            min-width: 200px;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .action-menu.show {
+            display: block;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .menu-item {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            background: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #334155;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item:hover {
+            background: #f8fafc;
+        }
+
+        .menu-item.warning {
+            color: #d97706;
+        }
+
+        .menu-item.warning:hover {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .menu-item.danger {
+            color: #dc2626;
+        }
+
+        .menu-item.danger:hover {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .menu-item svg {
+            flex-shrink: 0;
+        }
+
+        /* INLINE HR SELECTION PANEL */
+        .hr-selection-panel {
+            display: none;
+            margin-top: 15px;
+            padding: 20px;
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .hr-selection-panel.show {
+            display: block;
+            animation: expandDown 0.3s ease-out;
+        }
+
+        @keyframes expandDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+            }
+            to {
+                opacity: 1;
+                max-height: 500px;
+            }
+        }
+
+        .hr-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .hr-panel-header h3 {
+            color: #333;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .hr-panel-close {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.875rem;
+        }
+
+        .hr-panel-close:hover {
+            background: #c82333;
+        }
+
+        .current-hr-box {
+            padding: 12px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            color: #856404;
+        }
+
+        .hr-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 12px;
             max-height: 300px;
             overflow-y: auto;
         }
 
-        .dropdown-content.show {
-            display: block;
-        }
-
-        .dropdown-item {
-            padding: 12px 16px;
+        .hr-card {
+            padding: 15px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
             cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-            transition: background 0.2s;
+            transition: all 0.2s;
         }
 
-        .dropdown-item:hover {
-            background-color: #f8f9fa;
+        .hr-card:hover:not(.disabled) {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
         }
 
-        .dropdown-item:last-child {
-            border-bottom: none;
+        .hr-card.disabled {
+            background: #e9ecef;
+            border-color: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
         }
 
-        .dropdown-item strong {
-            display: block;
+        .hr-card-name {
+            font-weight: bold;
             color: #333;
-            margin-bottom: 3px;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
         }
 
-        .dropdown-item small {
+        .hr-card-details {
+            font-size: 0.8rem;
             color: #666;
-            font-size: 12px;
+        }
+
+        .hr-panel-footer {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #dee2e6;
+            display: flex;
+            gap: 10px;
+        }
+
+        .panel-btn {
+            flex: 1;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .panel-btn-unassign {
+            background: #dc3545;
+            color: white;
+        }
+
+        .panel-btn-unassign:hover {
+            background: #c82333;
         }
 
         .empty-state {
@@ -405,6 +624,7 @@
                                 <th>Email</th>
                                 <th>Phone</th>
                                 <th>Domains</th>
+                                <th>Assigned HR</th>
                                 <th>Status</th>
                                 <th>Registration Date</th>
                                 <th>Actions</th>
@@ -412,7 +632,7 @@
                         </thead>
                         <tbody id="studentsTableBody">
                             <tr>
-                                <td colspan="8">
+                                <td colspan="9">
                                     <div class="empty-state">
                                         <h3>Loading students...</h3>
                                     </div>
@@ -456,6 +676,12 @@
             try {
                 const response = await fetch('/api/admin/students');
                 allStudents = await response.json();
+                
+                // DEBUG: Check date field names
+                if (allStudents.length > 0) {
+                    console.log('Sample student data:', allStudents[0]);
+                }
+                
                 filteredStudents = allStudents;
                 displayStudents();
             } catch (error) {
@@ -481,7 +707,7 @@
             if (filteredStudents.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8">
+                        <td colspan="9">
                             <div class="empty-state">
                                 <h3>📭 No students found</h3>
                             </div>
@@ -498,127 +724,201 @@
                     <td>${student.phone || 'N/A'}</td>
                     <td>${student.domain_names || 'N/A'}</td>
                     <td>
+                        ${student.assigned_hr_name ? 
+                            `<span class="hr-badge hr-assigned">✓ ${student.assigned_hr_name}</span>` :
+                            `<span class="hr-badge hr-not-assigned">Not Assigned</span>`
+                        }
+                    </td>
+                    <td>
                         <span class="status-badge status-${student.account_status}">
                             ${student.account_status || 'N/A'}
                         </span>
                     </td>
-                    <td>${formatDate(student.created_at)}</td>
+                    <td>${formatDate(student.created_at || student.registration_date || student.date_created || student.registered_at)}</td>
                     <td>
-                        <div class="actions-cell">
-                            ${student.account_status === 'active' ? 
-                                `<button onclick="suspendStudent(${student.id})" class="btn btn-warning btn-sm">⛔ Suspend</button>` : 
-                                student.account_status === 'pending' ?
-                                `<button onclick="approveStudent(${student.id})" class="btn btn-primary btn-sm">✅ Approve</button>` :
-                                `<button onclick="activateStudent(${student.id})" class="btn btn-primary btn-sm">✅ Activate</button>`
-                            }
+                        <div class="action-buttons">
+                            <button class="btn-view" onclick="viewStudent(${student.id})" title="View Details">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                View
+                            </button>
                             
-                            <div class="dropdown">
-                                <button onclick="toggleHRDropdown(${student.id}, event)" class="btn btn-secondary btn-sm">
-                                    ${student.assigned_hr_name ? '👤 Change HR' : '👤 Assign HR'}
+                            <div class="action-dropdown">
+                                <button class="action-menu-btn" onclick="toggleActionMenu(event, ${student.id})" title="More actions">
+                                    <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
+                                        <circle cx="10" cy="4" r="1.5"/>
+                                        <circle cx="10" cy="10" r="1.5"/>
+                                        <circle cx="10" cy="16" r="1.5"/>
+                                    </svg>
                                 </button>
-                                <div id="hr-dropdown-${student.id}" class="dropdown-content">
-                                    <!-- Content generated on click -->
+                                <div class="action-menu" id="actionMenu${student.id}">
+                                    <button onclick="showHRPanel(${student.id})" class="menu-item">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="8.5" cy="7" r="4"/>
+                                            <line x1="20" y1="8" x2="20" y2="14"/>
+                                            <line x1="23" y1="11" x2="17" y2="11"/>
+                                        </svg>
+                                        ${student.assigned_hr_name ? 'Change HR' : 'Assign to HR'}
+                                    </button>
+                                    
+                                    ${student.account_status === 'active' ? 
+                                        `<button onclick="suspendStudent(${student.id})" class="menu-item warning">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect x="6" y="4" width="12" height="16" rx="2"/>
+                                            </svg>
+                                            Suspend Account
+                                        </button>` : 
+                                        student.account_status === 'pending' ?
+                                        `<button onclick="approveStudent(${student.id})" class="menu-item warning">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="20 6 9 17 4 12"/>
+                                            </svg>
+                                            Approve Student
+                                        </button>` :
+                                        `<button onclick="activateStudent(${student.id})" class="menu-item warning">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <path d="M8 12h8"/>
+                                            </svg>
+                                            Activate Account
+                                        </button>`
+                                    }
+                                    
+                                    <button onclick="deleteStudent(${student.id})" class="menu-item danger">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="3 6 5 6 21 6"/>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                        </svg>
+                                        Delete Student
+                                    </button>
                                 </div>
                             </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr id="hrPanelRow${student.id}" style="display: none;">
+                    <td colspan="9" style="padding: 0;">
+                        <div class="hr-selection-panel" id="hrPanel${student.id}">
+                            <div class="hr-panel-header">
+                                <h3>👥 Assign HR to ${student.full_name}</h3>
+                                <button class="hr-panel-close" onclick="closeHRPanel(${student.id})">✕ Close</button>
+                            </div>
                             
-                            <button onclick="viewStudent(${student.id})" class="btn btn-secondary btn-sm">👁️ View</button>
-                            <button onclick="deleteStudent(${student.id})" class="btn btn-danger btn-sm">🗑️ Delete</button>
+                            ${student.assigned_hr_name ? `
+                                <div class="current-hr-box">
+                                    <strong>Currently Assigned:</strong> ${student.assigned_hr_name}
+                                </div>
+                            ` : ''}
+                            
+                            <div class="hr-cards-grid" id="hrCards${student.id}">
+                                <!-- HR cards will be inserted here -->
+                            </div>
+                            
+                            <div class="hr-panel-footer">
+                                ${student.assigned_hr_id ? `
+                                    <button class="panel-btn panel-btn-unassign" onclick="unassignHR(${student.id})">
+                                        ❌ Unassign Current HR
+                                    </button>
+                                ` : ''}
+                            </div>
                         </div>
                     </td>
                 </tr>
             `).join('');
         }
 
-        // Generate HR dropdown HTML
-        function generateHRDropdown(student) {
-            console.log('Generating dropdown. HRs available:', allHRs.length);
-            
-            if (!allHRs || allHRs.length === 0) {
-                return '<div class="dropdown-item" style="padding: 12px; text-align: center; color: #999;">No HRs available</div>';
-            }
-
-            let html = '';
-            
-            // Add "Unassign" option if student has an assigned HR
-            if (student.assigned_hr_id) {
-                html += `<div class="dropdown-item" onclick="unassignHR(${student.id}, event)">
-                    <strong>❌ Unassign HR</strong>
-                    <small>Remove current HR assignment</small>
-                </div>`;
-            }
-
-            // Add all HRs
-            allHRs.forEach(hr => {
-                const isAssigned = student.assigned_hr_id === hr.id;
-                html += `<div class="dropdown-item ${isAssigned ? 'disabled' : ''}" 
-                    onclick="assignHRToStudent(${student.id}, ${hr.id}, event)" 
-                    style="${isAssigned ? 'background: #f0f0f0; cursor: not-allowed;' : ''}">
-                    <strong>${isAssigned ? '✓ ' : ''}${hr.full_name}</strong>
-                    <small>${hr.company_name} - ${hr.email}</small>
-                </div>`;
+        // Show HR selection panel inline
+        function showHRPanel(studentId) {
+            // Close all other panels
+            document.querySelectorAll('.hr-selection-panel').forEach(panel => {
+                panel.classList.remove('show');
+                panel.closest('tr').style.display = 'none';
             });
 
-            return html;
-        }
-
-        // Toggle HR dropdown
-        function toggleHRDropdown(studentId, event) {
-            event.stopPropagation();
-            
-            // Close all other dropdowns
-            document.querySelectorAll('.dropdown-content').forEach(dd => {
-                if (dd.id !== `hr-dropdown-${studentId}`) {
-                    dd.classList.remove('show');
-                }
+            // Close dropdown
+            document.querySelectorAll('.action-menu').forEach(menu => {
+                menu.classList.remove('show');
             });
 
-            // Get current dropdown
-            const dropdown = document.getElementById(`hr-dropdown-${studentId}`);
-            
-            // Find the student
             const student = allStudents.find(s => s.id === studentId);
-            
-            // Regenerate dropdown content with current HRs
-            if (student) {
-                dropdown.innerHTML = generateHRDropdown(student);
-            }
-            
-            // Toggle visibility
-            dropdown.classList.toggle('show');
-        }
+            const panelRow = document.getElementById(`hrPanelRow${studentId}`);
+            const panel = document.getElementById(`hrPanel${studentId}`);
+            const hrCardsContainer = document.getElementById(`hrCards${studentId}`);
 
-        // Close dropdowns when clicking outside
-        window.onclick = function(event) {
-            if (!event.target.matches('.btn-secondary')) {
-                document.querySelectorAll('.dropdown-content').forEach(dd => {
-                    dd.classList.remove('show');
-                });
-            }
-        }
-
-        // Assign HR to student
-        async function assignHRToStudent(studentId, hrId, event) {
-            if (event) event.stopPropagation();
-            
-            const hr = allHRs.find(h => h.id === hrId);
-            if (!confirm(`Assign student to ${hr.full_name} (${hr.company_name})?`)) {
+            if (!allHRs || allHRs.length === 0) {
+                alert('❌ No HRs available');
                 return;
             }
+
+            // Generate HR cards
+            hrCardsContainer.innerHTML = allHRs.map((hr, index) => {
+                const isAssigned = student.assigned_hr_id === hr.id;
+                return `
+                    <button 
+                        class="hr-card ${isAssigned ? 'disabled' : ''}" 
+                        ${isAssigned ? 'disabled' : `onclick="assignHRToStudent(${studentId}, ${hr.id})"`}
+                    >
+                        <div class="hr-card-name">
+                            ${isAssigned ? '✓ ' : ''}${index + 1}. ${hr.full_name}
+                        </div>
+                        <div class="hr-card-details">
+                            ${hr.company_name}<br>${hr.email}
+                        </div>
+                    </button>
+                `;
+            }).join('');
+
+            // Show panel
+            panelRow.style.display = 'table-row';
+            setTimeout(() => panel.classList.add('show'), 10);
+        }
+
+        // Close HR panel
+        function closeHRPanel(studentId) {
+            const panelRow = document.getElementById(`hrPanelRow${studentId}`);
+            const panel = document.getElementById(`hrPanel${studentId}`);
+            
+            panel.classList.remove('show');
+            setTimeout(() => panelRow.style.display = 'none', 300);
+        }
+
+        // Toggle action menu
+        function toggleActionMenu(event, studentId) {
+            event.stopPropagation();
+            document.querySelectorAll('.action-menu').forEach(menu => {
+                if (menu.id !== `actionMenu${studentId}`) {
+                    menu.classList.remove('show');
+                }
+            });
+            document.getElementById(`actionMenu${studentId}`).classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.action-menu').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        });
+
+        // Assign HR to student
+        async function assignHRToStudent(studentId, hrId) {
+            const hr = allHRs.find(h => h.id === hrId);
+            if (!confirm(`Assign student to ${hr.full_name} (${hr.company_name})?`)) return;
 
             try {
                 const response = await fetch('/api/admin/assign-students', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        hrId: hrId,
-                        studentIds: [studentId]
-                    })
+                    body: JSON.stringify({ hrId: hrId, studentIds: [studentId] })
                 });
 
                 const data = await response.json();
-
                 if (response.ok) {
                     alert('✅ ' + data.message);
+                    closeHRPanel(studentId);
                     loadStudents();
                 } else {
                     alert('❌ Error: ' + data.error);
@@ -629,27 +929,21 @@
             }
         }
 
-        // Unassign HR from student
-        async function unassignHR(studentId, event) {
-            if (event) event.stopPropagation();
-            
-            if (!confirm('Remove HR assignment from this student?')) {
-                return;
-            }
+        // Unassign HR
+        async function unassignHR(studentId) {
+            if (!confirm('Remove HR assignment from this student?')) return;
 
             try {
                 const response = await fetch('/api/admin/unassign-students', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        studentIds: [studentId]
-                    })
+                    body: JSON.stringify({ studentIds: [studentId] })
                 });
 
                 const data = await response.json();
-
                 if (response.ok) {
                     alert('✅ ' + data.message);
+                    closeHRPanel(studentId);
                     loadStudents();
                 } else {
                     alert('❌ Error: ' + data.error);
@@ -663,12 +957,8 @@
         // Approve student
         async function approveStudent(studentId) {
             if (!confirm('Approve this student?')) return;
-
             try {
-                const response = await fetch(`/api/admin/student/${studentId}/approve`, {
-                    method: 'POST'
-                });
-
+                const response = await fetch(`/api/admin/student/${studentId}/approve`, { method: 'POST' });
                 const data = await response.json();
                 if (response.ok) {
                     alert('✅ ' + data.message);
@@ -684,12 +974,8 @@
         // Suspend student
         async function suspendStudent(studentId) {
             if (!confirm('Suspend this student?')) return;
-
             try {
-                const response = await fetch(`/api/admin/student/${studentId}/suspend`, {
-                    method: 'POST'
-                });
-
+                const response = await fetch(`/api/admin/student/${studentId}/suspend`, { method: 'POST' });
                 const data = await response.json();
                 if (response.ok) {
                     alert('✅ ' + data.message);
@@ -705,12 +991,8 @@
         // Activate student
         async function activateStudent(studentId) {
             if (!confirm('Activate this student?')) return;
-
             try {
-                const response = await fetch(`/api/admin/student/${studentId}/activate`, {
-                    method: 'POST'
-                });
-
+                const response = await fetch(`/api/admin/student/${studentId}/activate`, { method: 'POST' });
                 const data = await response.json();
                 if (response.ok) {
                     alert('✅ ' + data.message);
@@ -726,12 +1008,8 @@
         // Delete student
         async function deleteStudent(studentId) {
             if (!confirm('⚠️ Are you sure you want to delete this student? This action cannot be undone!')) return;
-
             try {
-                const response = await fetch(`/api/admin/student/${studentId}`, {
-                    method: 'DELETE'
-                });
-
+                const response = await fetch(`/api/admin/student/${studentId}`, { method: 'DELETE' });
                 const data = await response.json();
                 if (response.ok) {
                     alert('✅ ' + data.message);
@@ -768,14 +1046,27 @@
             displayStudents();
         }
 
-        // Format date
+        // Format date - IMPROVED
         function formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            if (!dateString) {
+                const today = new Date();
+                return today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            }
+            
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                    const today = new Date();
+                    return today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                }
+                return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            } catch (error) {
+                const today = new Date();
+                return today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            }
         }
 
-        // Initialize - Load HRs first, then students
+        // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
             checkSuperAdmin();
             await loadHRs();
@@ -784,3 +1075,4 @@
     </script>
 </body>
 </html>
+    
