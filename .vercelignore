@@ -1,7 +1,11 @@
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
 wapl.db
 flask_session/
 uploads/
-venv/
-.env
+fonts/
