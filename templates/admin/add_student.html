@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Student - WAPL Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .add-student-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 1.75rem;
+            color: #1e293b;
+        }
+
+        .btn-back {
+            background: #64748b;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+
+        .btn-back:hover {
+            background: #475569;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #334155;
+            font-size: 0.9rem;
+        }
+
+        .form-group label .required {
+            color: #ef4444;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .domains-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .domains-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .domain-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .domain-checkbox:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .domain-checkbox input[type="checkbox"] {
+            margin-right: 0.5rem;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .domain-checkbox input[type="checkbox"]:checked + span {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .domain-checkbox.selected {
+            background: #dbeafe;
+            border-color: #3b82f6;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .btn {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .alert-success {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/secure-admin-panel/wapl/dashboard" class="navbar-brand">WAPL Admin</a>
+            <div class="navbar-menu">
+                <a href="/secure-admin-panel/wapl/dashboard">Dashboard</a>
+                <a href="/secure-admin-panel/wapl/students" style="font-weight: bold;">Students</a>
+                <a href="/secure-admin-panel/wapl/hrs">HRs</a>
+                <a href="/secure-admin-panel/wapl/domains">Domains</a>
+                <button onclick="logout()" class="btn btn-link">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="add-student-container">
+        <div class="page-header">
+            <h1>Add New Student</h1>
+            <a href="/secure-admin-panel/wapl/students" class="btn-back">← Back to Students</a>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <form id="addStudentForm">
+            <div class="form-group">
+                <label for="email">Email <span class="required">*</span></label>
+                <input type="email" id="email" name="email" class="form-control" required>
+                <p class="help-text">Student will use this email to login</p>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password <span class="required">*</span></label>
+                <input type="password" id="password" name="password" class="form-control" required minlength="6">
+                <p class="help-text">Minimum 6 characters</p>
+            </div>
+
+            <div class="form-group">
+                <label for="fullName">Full Name <span class="required">*</span></label>
+                <input type="text" id="fullName" name="fullName" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number <span class="required">*</span></label>
+                <input type="tel" id="phone" name="phone" class="form-control" required>
+                <p class="help-text">10-digit mobile number</p>
+            </div>
+
+            <div class="form-group">
+                <label for="address">Address</label>
+                <textarea id="address" name="address" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="domains-section">
+                <label>Select Domains <span class="required">*</span></label>
+                <p class="help-text">Choose one or more domains for this student</p>
+                <div id="domainsGrid" class="domains-grid">
+                    <p style="color: #64748b;">Loading domains...</p>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    Create Student
+                </button>
+                <a href="/secure-admin-panel/wapl/students" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script>
+        // Load domains on page load
+        async function loadDomains() {
+            try {
+                const response = await fetch('/api/admin/domains');
+                const domains = await response.json();
+
+                const grid = document.getElementById('domainsGrid');
+                
+                if (domains.length === 0) {
+                    grid.innerHTML = '<p style="color: #64748b;">No domains available</p>';
+                    return;
+                }
+
+                grid.innerHTML = '';
+                domains.forEach(domain => {
+                    if (domain.is_active) {
+                        const label = document.createElement('label');
+                        label.className = 'domain-checkbox';
+                        label.innerHTML = `
+                            <input type="checkbox" name="domainIds" value="${domain.id}" onchange="toggleDomainStyle(this)">
+                            <span>${domain.domain_name}</span>
+                        `;
+                        grid.appendChild(label);
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading domains:', error);
+                showAlert('Failed to load domains', 'error');
+            }
+        }
+
+        function toggleDomainStyle(checkbox) {
+            const label = checkbox.closest('.domain-checkbox');
+            if (checkbox.checked) {
+                label.classList.add('selected');
+            } else {
+                label.classList.remove('selected');
+            }
+        }
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            container.innerHTML = `
+                <div class="alert alert-${type}">
+                    ${message}
+                </div>
+            `;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        // Handle form submission
+        document.getElementById('addStudentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Get form data
+            const formData = new FormData(e.target);
+            const email = formData.get('email');
+            const password = formData.get('password');
+            const fullName = formData.get('fullName');
+            const phone = formData.get('phone');
+            const address = formData.get('address');
+
+            // Get selected domains
+            const domainIds = Array.from(document.querySelectorAll('input[name="domainIds"]:checked'))
+                .map(cb => parseInt(cb.value));
+
+            if (domainIds.length === 0) {
+                showAlert('Please select at least one domain', 'error');
+                return;
+            }
+
+            // Disable submit button
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span> Creating...';
+
+            try {
+                const response = await fetch('/api/admin/student/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        fullName,
+                        phone,
+                        address,
+                        domainIds
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert(`✅ Student created successfully! WAPL ID: ${result.wapl_id}`, 'success');
+                    
+                    // Reset form
+                    e.target.reset();
+                    document.querySelectorAll('.domain-checkbox').forEach(label => {
+                        label.classList.remove('selected');
+                    });
+
+                    // Redirect after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/secure-admin-panel/wapl/students';
+                    }, 2000);
+                } else {
+                    showAlert(result.error || 'Failed to create student', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('An error occurred. Please try again.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        });
+
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/secure-admin-panel/wapl/login';
+            } catch (error) {
+                window.location.href = '/secure-admin-panel/wapl/login';
+            }
+        }
+
+        // Load domains when page loads
+        loadDomains();
+    </script>
+</body>
+</html>

@@ -2,13 +2,17 @@ from flask import Blueprint, request, jsonify, session, redirect, url_for, rende
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 from database import db
+from utils import generate_wapl_id, sanitize_input
 from functools import wraps
 import json
 import os
 
+
 admin_bp = Blueprint('admin', __name__)
 
+
 # ==================== DECORATORS ====================
+
 
 def require_admin_auth(f):
     """Require any admin (super or regular)"""
@@ -20,6 +24,7 @@ def require_admin_auth(f):
             return redirect(url_for('admin.admin_login_page'))
         return f(*args, **kwargs)
     return wrapper
+
 
 def require_super_admin_auth(f):
     """Require super admin only"""
@@ -38,7 +43,9 @@ def require_super_admin_auth(f):
         return f(*args, **kwargs)
     return wrapper
 
+
 # ==================== AUTH ROUTES ====================
+
 
 @admin_bp.route('/api/auth/logout', methods=['POST', 'GET'])
 def logout():
@@ -49,13 +56,16 @@ def logout():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @admin_bp.route('/secure-admin-panel/wapl/logout')
 def logout_redirect():
     """Logout page - clears session and redirects"""
     session.clear()
     return redirect('/secure-admin-panel/wapl/login')
 
+
 # ==================== PAGE ROUTES ====================
+
 
 @admin_bp.route('/secure-admin-panel/wapl/login')
 def admin_login_page():
@@ -63,6 +73,7 @@ def admin_login_page():
     if 'user_id' in session and session.get('role') == 'admin':
         return redirect('/secure-admin-panel/wapl/dashboard')
     return render_template('admin/login.html')
+
 
 @admin_bp.route('/api/admin/login', methods=['POST'])
 def admin_login():
@@ -113,11 +124,13 @@ def admin_login():
         print(f"Admin login error: {e}")
         return jsonify({'error': 'An error occurred during login'}), 500
 
+
 @admin_bp.route('/secure-admin-panel/wapl/dashboard')
 @require_admin_auth
 def admin_dashboard():
     """Admin dashboard page"""
     return render_template('admin/dashboard.html')
+
 
 @admin_bp.route('/secure-admin-panel/wapl/students')
 @require_admin_auth
@@ -125,11 +138,20 @@ def admin_students():
     """Students management page"""
     return render_template('admin/students.html')
 
+
+@admin_bp.route('/secure-admin-panel/wapl/add-student')
+@require_admin_auth
+def add_student_page():
+    """Add student page"""
+    return render_template('admin/add_student.html')
+
+
 @admin_bp.route('/secure-admin-panel/wapl/hrs')
 @require_admin_auth
 def admin_hrs():
     """HRs management page"""
     return render_template('admin/hrs.html')
+
 
 @admin_bp.route('/secure-admin-panel/wapl/assign-students')
 @require_admin_auth
@@ -137,11 +159,13 @@ def admin_assign_students():
     """Assign students to HR page"""
     return render_template('admin/assign_students.html')
 
+
 @admin_bp.route('/secure-admin-panel/wapl/domains')
 @require_super_admin_auth
 def admin_domains():
     """Domains management page - Super Admin only"""
     return render_template('admin/domains.html')
+
 
 @admin_bp.route('/secure-admin-panel/wapl/certificates')
 @require_admin_auth
@@ -149,11 +173,13 @@ def admin_certificates():
     """Certificates management page"""
     return render_template('admin/certificates.html')
 
+
 @admin_bp.route('/secure-admin-panel/wapl/recruitment')
 @require_admin_auth
 def admin_recruitment():
     """Recruitment management page"""
     return render_template('admin/recruitment.html')
+
 
 @admin_bp.route('/secure-admin-panel/wapl/admins')
 @require_super_admin_auth
@@ -161,13 +187,16 @@ def admin_admins_page():
     """Admin management page - Super Admin only"""
     return render_template('admin/admins.html')
 
+
 # ==================== API ROUTES ====================
+
 
 @admin_bp.route('/api/admin/check-super-admin', methods=['GET'])
 @require_admin_auth
 def check_super_admin():
     """Check if current admin is super admin"""
     return jsonify({'is_super_admin': session.get('is_super_admin', False)}), 200
+
 
 @admin_bp.route('/api/admin/dashboard/stats', methods=['GET'])
 @require_admin_auth
@@ -229,7 +258,9 @@ def get_dashboard_stats():
         print(f"Error getting dashboard stats: {e}")
         return jsonify({'error': str(e)}), 500
 
+
 # ==================== ADMIN MANAGEMENT ROUTES ====================
+
 
 @admin_bp.route('/api/admin/admins', methods=['GET'])
 @require_super_admin_auth
@@ -252,6 +283,7 @@ def get_admins():
     except Exception as e:
         print(f"Error getting admins: {e}")
         return jsonify({'error': str(e)}), 500
+
 
 @admin_bp.route('/api/admin/admin/create', methods=['POST'])
 @require_super_admin_auth
@@ -294,6 +326,7 @@ def create_admin():
         print(f"Error creating admin: {e}")
         return jsonify({'error': str(e)}), 500
 
+
 @admin_bp.route('/api/admin/admin/<int:admin_id>', methods=['DELETE'])
 @require_super_admin_auth
 def delete_admin(admin_id):
@@ -322,7 +355,9 @@ def delete_admin(admin_id):
         print(f"Error deleting admin: {e}")
         return jsonify({'error': str(e)}), 500
 
+
 # ==================== STUDENT MANAGEMENT ROUTES ====================
+
 
 @admin_bp.route('/api/admin/students', methods=['GET'])
 @require_admin_auth
@@ -350,6 +385,90 @@ def get_students():
         print(f"Error getting students: {e}")
         return jsonify({'error': str(e)}), 500
 
+
+@admin_bp.route('/api/admin/student/create', methods=['POST'])
+@require_admin_auth
+def create_student():
+    """Admin creates a student account directly - ACTIVE status"""
+    try:
+        data = request.get_json()
+        email = sanitize_input(data.get('email', '').strip().lower())
+        password = data.get('password', '')
+        full_name = sanitize_input(data.get('fullName', '').strip())
+        phone = sanitize_input(data.get('phone', '').strip())
+        address = sanitize_input(data.get('address', '').strip())
+        domain_ids = data.get('domainIds', [])
+        
+        # Validation
+        if not all([email, password, full_name, phone]):
+            return jsonify({'error': 'Email, password, full name, and phone are required'}), 400
+        
+        if not domain_ids or len(domain_ids) == 0:
+            return jsonify({'error': 'Please select at least one domain'}), 400
+        
+        if len(password) < 6:
+            return jsonify({'error': 'Password must be at least 6 characters'}), 400
+        
+        # Check if email exists
+        existing_user = db.execute_query(
+            'SELECT id FROM users WHERE email = ?',
+            (email,),
+            fetch_one=True
+        )
+        
+        if existing_user:
+            return jsonify({'error': 'Email already registered'}), 400
+        
+        # Validate domains
+        for domain_id in domain_ids:
+            domain = db.execute_query(
+                'SELECT id FROM domains WHERE id = ? AND is_active = 1',
+                (domain_id,),
+                fetch_one=True
+            )
+            if not domain:
+                return jsonify({'error': f'Invalid or inactive domain selected'}), 400
+        
+        # Create user account (verified and active)
+        password_hash = generate_password_hash(password)
+        user_id = db.execute_query(
+            'INSERT INTO users (email, password_hash, role, is_verified) VALUES (?, ?, ?, ?)',
+            (email, password_hash, 'student', 1)  # Already verified
+        )
+        
+        # Generate WAPL ID
+        wapl_id = generate_wapl_id()
+        
+        # Create student record with ACTIVE status (admin-created = auto-approved)
+        student_id = db.execute_query(
+            '''INSERT INTO students 
+               (user_id, wapl_id, full_name, phone, address, account_status, registration_date)
+               VALUES (?, ?, ?, ?, ?, ?, ?)''',
+            (user_id, wapl_id, full_name, phone, address, 'active', datetime.now())
+        )
+        
+        # Assign domains
+        for domain_id in domain_ids:
+            db.execute_query(
+                "INSERT INTO student_domains (student_id, domain_id) VALUES (?, ?)",
+                (student_id, domain_id)
+            )
+        
+        print(f"✅ Student created by admin: {email} (WAPL ID: {wapl_id}) - Status: ACTIVE")
+        
+        return jsonify({
+            'message': 'Student created successfully',
+            'wapl_id': wapl_id,
+            'status': 'active'
+        }), 201
+        
+    except Exception as e:
+        print(f"Error creating student: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
 @admin_bp.route('/api/admin/student/<int:student_id>/status', methods=['PUT'])
 @require_admin_auth
 def update_student_status(student_id):
@@ -370,6 +489,7 @@ def update_student_status(student_id):
         print(f"Error updating student status: {e}")
         return jsonify({'error': str(e)}), 500
 
+
 @admin_bp.route('/api/admin/student/<int:student_id>', methods=['DELETE'])
 @require_admin_auth
 def delete_student(student_id):
@@ -388,7 +508,9 @@ def delete_student(student_id):
         print(f"Error deleting student: {e}")
         return jsonify({'error': str(e)}), 500
 
+
 # ==================== HR MANAGEMENT ROUTES ====================
+
 
 @admin_bp.route('/api/admin/hrs', methods=['GET'])
 @require_admin_auth
@@ -409,6 +531,7 @@ def get_hrs():
     except Exception as e:
         print(f"Error getting HRs: {e}")
         return jsonify({'error': str(e)}), 500
+
 
 @admin_bp.route('/api/admin/hr/create', methods=['POST'])
 @require_admin_auth
@@ -449,6 +572,7 @@ def create_hr():
         print(f"Error creating HR: {e}")
         return jsonify({'error': str(e)}), 500
 
+
 @admin_bp.route('/api/admin/hr/<int:hr_id>', methods=['DELETE'])
 @require_admin_auth
 def delete_hr(hr_id):
@@ -466,6 +590,7 @@ def delete_hr(hr_id):
     except Exception as e:
         print(f"Error deleting HR: {e}")
         return jsonify({'error': str(e)}), 500
+
 
 @admin_bp.route('/api/admin/hr/<int:hr_id>/students', methods=['GET'])
 @require_admin_auth
@@ -491,7 +616,9 @@ def get_hr_students(hr_id):
         print(f"Error getting HR students: {e}")
         return jsonify({'error': str(e)}), 500
 
+
 # ==================== STUDENT ASSIGNMENT ROUTES ====================
+
 
 @admin_bp.route('/api/admin/assign-students', methods=['POST'])
 @require_admin_auth
@@ -518,6 +645,7 @@ def assign_students():
         print(f"Error assigning students: {e}")
         return jsonify({'error': str(e)}), 500
 
+
 @admin_bp.route('/api/admin/unassign-students', methods=['POST'])
 @require_admin_auth
 def unassign_students():
@@ -537,6 +665,7 @@ def unassign_students():
     except Exception as e:
         print(f"Error unassigning students: {e}")
         return jsonify({'error': str(e)}), 500
+
 
 @admin_bp.route('/api/admin/students/unassigned', methods=['GET'])
 @require_admin_auth
@@ -562,7 +691,9 @@ def get_unassigned_students():
         print(f"Error getting unassigned students: {e}")
         return jsonify({'error': str(e)}), 500
 
+
 # ==================== DOMAIN MANAGEMENT ROUTES ====================
+
 
 @admin_bp.route('/api/admin/domains', methods=['GET'])
 def get_domains():
@@ -573,6 +704,7 @@ def get_domains():
     except Exception as e:
         print(f"Error getting domains: {e}")
         return jsonify({'error': str(e)}), 500
+
 
 @admin_bp.route('/api/admin/domain/create', methods=['POST'])
 @require_super_admin_auth
@@ -606,6 +738,7 @@ def create_domain():
         print(f"Error creating domain: {e}")
         return jsonify({'error': str(e)}), 500
 
+
 @admin_bp.route('/api/admin/domain/<int:domain_id>/status', methods=['PUT'])
 @require_super_admin_auth
 def update_domain_status(domain_id):
@@ -626,6 +759,7 @@ def update_domain_status(domain_id):
     except Exception as e:
         print(f"Error updating domain status: {e}")
         return jsonify({'error': str(e)}), 500
+
 
 @admin_bp.route('/api/admin/domain/<int:domain_id>', methods=['DELETE'])
 @require_super_admin_auth
@@ -653,7 +787,9 @@ def delete_domain(domain_id):
         print(f"Error deleting domain: {e}")
         return jsonify({'error': str(e)}), 500
 
+
 # ==================== CERTIFICATE MANAGEMENT ROUTES ====================
+
 
 @admin_bp.route('/api/admin/students/without-certificates', methods=['GET'])
 @require_admin_auth
@@ -680,6 +816,7 @@ def get_students_without_certificates():
         print(f"Error getting students without certificates: {e}")
         return jsonify({'error': str(e)}), 500
 
+
 @admin_bp.route('/api/admin/certificates', methods=['GET'])
 @require_admin_auth
 def get_certificates():
@@ -703,6 +840,7 @@ def get_certificates():
     except Exception as e:
         print(f"Error getting certificates: {e}")
         return jsonify({'error': str(e)}), 500
+
 
 @admin_bp.route('/api/admin/certificates/issue', methods=['POST'])
 @require_admin_auth
@@ -839,7 +977,9 @@ def issue_certificates():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+
 # ==================== RECRUITMENT ROUTES ====================
+
 
 @admin_bp.route('/api/admin/recruitment', methods=['GET'])
 @require_admin_auth
