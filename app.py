@@ -194,13 +194,18 @@ if __name__ == '__main__':
     print("🚀 Starting WAPL ID Management System")
     print("="*60)
     print("✅ Database initialized successfully")
-    print("\n📍 Server starting on http://localhost:5000")
-    print("📍 Network: http://0.0.0.0:5000")
+    
+    # Get port from environment or default to 5000
+    port = int(os.environ.get('PORT', 5000))
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False') == 'True'
+    
+    print(f"\n📍 Server starting on http://0.0.0.0:{port}")
+    print(f"🔧 Debug mode: {debug_mode}")
     print("="*60 + "\n")
     
     # Run the Flask development server
     app.run(
         host='0.0.0.0',
-        port=5000,
-        debug=True
+        port=port,
+        debug=debug_mode
     )

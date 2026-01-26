@@ -7,8 +7,8 @@ import secrets
 import string
 
 
-# Use /tmp directory on Vercel (serverless), current directory locally
-if os.environ.get('VERCEL'):
+# Use /tmp directory on Vercel/Render (serverless), current directory locally
+if os.environ.get('VERCEL') or os.environ.get('RENDER'):
     DB_NAME = '/tmp/wapl.db'
 else:
     DB_NAME = 'wapl.db'
