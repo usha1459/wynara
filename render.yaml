@@ -2,12 +2,10 @@ services:
   - type: web
     name: wapl-system
     runtime: python
-    runtimeVersion: 3.11
+    runtimeVersion: 3.11.0
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 60 app:app
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --access-logfile - app:app
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11
       - key: FLASK_ENV
         value: production
       - key: FLASK_DEBUG
