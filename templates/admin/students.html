@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Students Management - WAPL Admin</title>
     <style>
         * {
@@ -21,6 +21,30 @@
             min-height: 100vh;
         }
 
+        /* Hamburger Menu Button */
+        .hamburger-btn {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1001;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .hamburger-btn span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background: white;
+            margin: 5px 0;
+            border-radius: 2px;
+        }
+
         /* Sidebar */
         .sidebar {
             width: 250px;
@@ -30,6 +54,8 @@
             position: fixed;
             height: 100vh;
             overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 1000;
         }
 
         .logo {
@@ -79,6 +105,7 @@
             margin-left: 250px;
             padding: 30px;
             width: calc(100% - 250px);
+            transition: margin-left 0.3s ease, width 0.3s ease;
         }
 
         /* Header */
@@ -136,18 +163,22 @@
             align-items: center;
             margin-bottom: 25px;
             gap: 20px;
+            flex-wrap: wrap;
         }
 
         .filters {
             display: flex;
             gap: 15px;
             flex: 1;
+            flex-wrap: wrap;
         }
 
         .filter-group {
             display: flex;
             flex-direction: column;
             gap: 5px;
+            flex: 1;
+            min-width: 200px;
         }
 
         .filter-group label {
@@ -162,7 +193,6 @@
             border: 2px solid #ddd;
             border-radius: 8px;
             font-size: 14px;
-            min-width: 200px;
         }
 
         .btn {
@@ -176,6 +206,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            text-decoration: none;
         }
 
         .btn-primary {
@@ -188,14 +219,16 @@
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
 
-        /* Table */
+        /* Table for Desktop */
         .table-container {
             overflow-x: auto;
+            display: block;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 1000px;
         }
 
         th {
@@ -205,6 +238,7 @@
             font-weight: bold;
             color: #333;
             border-bottom: 2px solid #dee2e6;
+            white-space: nowrap;
         }
 
         td {
@@ -224,6 +258,7 @@
             font-weight: bold;
             text-transform: uppercase;
             display: inline-block;
+            white-space: nowrap;
         }
 
         .status-active {
@@ -241,13 +276,13 @@
             color: #721c24;
         }
 
-        /* HR Assignment Badges */
         .hr-badge {
             display: inline-block;
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 500;
+            white-space: nowrap;
         }
 
         .hr-assigned {
@@ -268,6 +303,7 @@
             gap: 8px;
             align-items: center;
             justify-content: flex-start;
+            flex-wrap: wrap;
         }
 
         .btn-view {
@@ -283,6 +319,7 @@
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .btn-view:hover {
@@ -291,11 +328,6 @@
             box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
         }
 
-        .btn-view svg {
-            flex-shrink: 0;
-        }
-
-        /* Dropdown */
         .action-dropdown {
             position: relative;
             display: inline-block;
@@ -337,18 +369,6 @@
 
         .action-menu.show {
             display: block;
-            animation: slideDown 0.2s ease-out;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         .menu-item {
@@ -381,7 +401,6 @@
 
         .menu-item.warning:hover {
             background: #fef3c7;
-            color: #92400e;
         }
 
         .menu-item.danger {
@@ -390,14 +409,8 @@
 
         .menu-item.danger:hover {
             background: #fef2f2;
-            color: #991b1b;
         }
 
-        .menu-item svg {
-            flex-shrink: 0;
-        }
-
-        /* INLINE HR SELECTION PANEL */
         .hr-selection-panel {
             display: none;
             margin-top: 15px;
@@ -405,23 +418,10 @@
             background: #f8f9fa;
             border: 2px solid #667eea;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
         }
 
         .hr-selection-panel.show {
             display: block;
-            animation: expandDown 0.3s ease-out;
-        }
-
-        @keyframes expandDown {
-            from {
-                opacity: 0;
-                max-height: 0;
-            }
-            to {
-                opacity: 1;
-                max-height: 500px;
-            }
         }
 
         .hr-panel-header {
@@ -433,12 +433,6 @@
             border-bottom: 2px solid #dee2e6;
         }
 
-        .hr-panel-header h3 {
-            color: #333;
-            font-size: 1.1rem;
-            margin: 0;
-        }
-
         .hr-panel-close {
             background: #dc3545;
             color: white;
@@ -447,20 +441,6 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 0.875rem;
-        }
-
-        .hr-panel-close:hover {
-            background: #c82333;
-        }
-
-        .current-hr-box {
-            padding: 12px;
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            color: #856404;
         }
 
         .hr-cards-grid {
@@ -484,53 +464,6 @@
             border-color: #667eea;
             background: #f0f4ff;
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
-        }
-
-        .hr-card.disabled {
-            background: #e9ecef;
-            border-color: #6c757d;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        .hr-card-name {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 6px;
-            font-size: 0.95rem;
-        }
-
-        .hr-card-details {
-            font-size: 0.8rem;
-            color: #666;
-        }
-
-        .hr-panel-footer {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 2px solid #dee2e6;
-            display: flex;
-            gap: 10px;
-        }
-
-        .panel-btn {
-            flex: 1;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .panel-btn-unassign {
-            background: #dc3545;
-            color: white;
-        }
-
-        .panel-btn-unassign:hover {
-            background: #c82333;
         }
 
         .empty-state {
@@ -539,16 +472,212 @@
             color: #666;
         }
 
-        .empty-state h3 {
-            font-size: 24px;
-            margin-bottom: 10px;
+        /* Mobile Card View */
+        .student-cards {
+            display: none;
+        }
+
+        .student-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .student-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .student-card-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+
+        .student-card-wapl-id {
+            font-size: 13px;
+            color: #667eea;
+            font-family: monospace;
+        }
+
+        .student-card-info {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .info-label {
+            color: #64748b;
+            font-weight: 500;
+            min-width: 80px;
+        }
+
+        .info-value {
+            color: #1e293b;
+        }
+
+        .student-card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        /* Sidebar Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .hamburger-btn {
+                display: block;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 80px 15px 15px;
+            }
+
+            .admin-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 15px 20px;
+                gap: 10px;
+            }
+
+            .admin-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .admin-info h1 {
+                font-size: 22px;
+            }
+
+            .content-card {
+                padding: 20px 15px;
+            }
+
+            .top-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .filter-group {
+                min-width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Hide table, show cards */
+            .table-container {
+                display: none;
+            }
+
+            .student-cards {
+                display: block;
+            }
+
+            .hr-cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .student-card-actions {
+                flex-direction: column;
+            }
+
+            .btn-view {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .action-menu {
+                left: 0;
+                right: auto;
+                min-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 70px 10px 10px;
+            }
+
+            .admin-info h1 {
+                font-size: 18px;
+            }
+
+            .content-card {
+                padding: 15px 10px;
+            }
+
+            .student-card {
+                padding: 15px;
+            }
+
+            .student-card-name {
+                font-size: 16px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" onclick="toggleSidebar()">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
     <div class="admin-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="logo">
                 <h2>🎓 WAPL Admin</h2>
             </div>
@@ -615,6 +744,7 @@
 
                 <h2 style="margin-bottom: 20px;">All Students</h2>
 
+                <!-- Desktop Table View -->
                 <div class="table-container">
                     <table>
                         <thead>
@@ -641,6 +771,11 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Mobile Card View -->
+                <div class="student-cards" id="studentCards">
+                    <!-- Cards will be generated here -->
+                </div>
             </div>
         </main>
     </div>
@@ -650,7 +785,24 @@
         let allHRs = [];
         let filteredStudents = [];
 
-        // Check super admin
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.querySelector('.sidebar-overlay').classList.remove('active');
+        }
+
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    closeSidebar();
+                }
+            });
+        });
+
         async function checkSuperAdmin() {
             try {
                 const response = await fetch('/api/admin/check-super-admin');
@@ -671,17 +823,10 @@
             }
         }
 
-        // Load all students
         async function loadStudents() {
             try {
                 const response = await fetch('/api/admin/students');
                 allStudents = await response.json();
-                
-                // DEBUG: Check date field names
-                if (allStudents.length > 0) {
-                    console.log('Sample student data:', allStudents[0]);
-                }
-                
                 filteredStudents = allStudents;
                 displayStudents();
             } catch (error) {
@@ -689,19 +834,21 @@
             }
         }
 
-        // Load all HRs
         async function loadHRs() {
             try {
                 const response = await fetch('/api/admin/hrs');
                 allHRs = await response.json();
-                console.log('HRs loaded:', allHRs.length);
             } catch (error) {
                 console.error('Error loading HRs:', error);
             }
         }
 
-        // Display students
         function displayStudents() {
+            displayTableView();
+            displayCardView();
+        }
+
+        function displayTableView() {
             const tbody = document.getElementById('studentsTableBody');
             
             if (filteredStudents.length === 0) {
@@ -734,10 +881,10 @@
                             ${student.account_status || 'N/A'}
                         </span>
                     </td>
-                    <td>${formatDate(student.created_at || student.registration_date || student.date_created || student.registered_at)}</td>
+                    <td>${formatDate(student.created_at || student.registration_date)}</td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn-view" onclick="viewStudent(${student.id})" title="View Details">
+                            <button class="btn-view" onclick="viewStudent(${student.id})">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                     <circle cx="12" cy="12" r="3"/>
@@ -746,7 +893,7 @@
                             </button>
                             
                             <div class="action-dropdown">
-                                <button class="action-menu-btn" onclick="toggleActionMenu(event, ${student.id})" title="More actions">
+                                <button class="action-menu-btn" onclick="toggleActionMenu(event, ${student.id})">
                                     <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
                                         <circle cx="10" cy="4" r="1.5"/>
                                         <circle cx="10" cy="10" r="1.5"/>
@@ -754,75 +901,15 @@
                                     </svg>
                                 </button>
                                 <div class="action-menu" id="actionMenu${student.id}">
-                                    <button onclick="showHRPanel(${student.id})" class="menu-item">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                            <circle cx="8.5" cy="7" r="4"/>
-                                            <line x1="20" y1="8" x2="20" y2="14"/>
-                                            <line x1="23" y1="11" x2="17" y2="11"/>
-                                        </svg>
-                                        ${student.assigned_hr_name ? 'Change HR' : 'Assign to HR'}
-                                    </button>
-                                    
-                                    ${student.account_status === 'active' ? 
-                                        `<button onclick="suspendStudent(${student.id})" class="menu-item warning">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <rect x="6" y="4" width="12" height="16" rx="2"/>
-                                            </svg>
-                                            Suspend Account
-                                        </button>` : 
-                                        student.account_status === 'pending' ?
-                                        `<button onclick="approveStudent(${student.id})" class="menu-item warning">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <polyline points="20 6 9 17 4 12"/>
-                                            </svg>
-                                            Approve Student
-                                        </button>` :
-                                        `<button onclick="activateStudent(${student.id})" class="menu-item warning">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <circle cx="12" cy="12" r="10"/>
-                                                <path d="M8 12h8"/>
-                                            </svg>
-                                            Activate Account
-                                        </button>`
+                                    ${student.account_status === 'pending' ? 
+                                        `<button onclick="approveStudent(${student.id})" class="menu-item warning">✓ Approve</button>` : ''
                                     }
-                                    
-                                    <button onclick="deleteStudent(${student.id})" class="menu-item danger">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <polyline points="3 6 5 6 21 6"/>
-                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                        </svg>
-                                        Delete Student
-                                    </button>
+                                    ${student.account_status === 'active' ? 
+                                        `<button onclick="suspendStudent(${student.id})" class="menu-item warning">⏸ Suspend</button>` : 
+                                        `<button onclick="activateStudent(${student.id})" class="menu-item warning">▶ Activate</button>`
+                                    }
+                                    <button onclick="deleteStudent(${student.id})" class="menu-item danger">🗑 Delete</button>
                                 </div>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-                <tr id="hrPanelRow${student.id}" style="display: none;">
-                    <td colspan="9" style="padding: 0;">
-                        <div class="hr-selection-panel" id="hrPanel${student.id}">
-                            <div class="hr-panel-header">
-                                <h3>👥 Assign HR to ${student.full_name}</h3>
-                                <button class="hr-panel-close" onclick="closeHRPanel(${student.id})">✕ Close</button>
-                            </div>
-                            
-                            ${student.assigned_hr_name ? `
-                                <div class="current-hr-box">
-                                    <strong>Currently Assigned:</strong> ${student.assigned_hr_name}
-                                </div>
-                            ` : ''}
-                            
-                            <div class="hr-cards-grid" id="hrCards${student.id}">
-                                <!-- HR cards will be inserted here -->
-                            </div>
-                            
-                            <div class="hr-panel-footer">
-                                ${student.assigned_hr_id ? `
-                                    <button class="panel-btn panel-btn-unassign" onclick="unassignHR(${student.id})">
-                                        ❌ Unassign Current HR
-                                    </button>
-                                ` : ''}
                             </div>
                         </div>
                     </td>
@@ -830,62 +917,66 @@
             `).join('');
         }
 
-        // Show HR selection panel inline
-        function showHRPanel(studentId) {
-            // Close all other panels
-            document.querySelectorAll('.hr-selection-panel').forEach(panel => {
-                panel.classList.remove('show');
-                panel.closest('tr').style.display = 'none';
-            });
-
-            // Close dropdown
-            document.querySelectorAll('.action-menu').forEach(menu => {
-                menu.classList.remove('show');
-            });
-
-            const student = allStudents.find(s => s.id === studentId);
-            const panelRow = document.getElementById(`hrPanelRow${studentId}`);
-            const panel = document.getElementById(`hrPanel${studentId}`);
-            const hrCardsContainer = document.getElementById(`hrCards${studentId}`);
-
-            if (!allHRs || allHRs.length === 0) {
-                alert('❌ No HRs available');
+        function displayCardView() {
+            const cardsContainer = document.getElementById('studentCards');
+            
+            if (filteredStudents.length === 0) {
+                cardsContainer.innerHTML = `<div class="empty-state"><h3>📭 No students found</h3></div>`;
                 return;
             }
 
-            // Generate HR cards
-            hrCardsContainer.innerHTML = allHRs.map((hr, index) => {
-                const isAssigned = student.assigned_hr_id === hr.id;
-                return `
-                    <button 
-                        class="hr-card ${isAssigned ? 'disabled' : ''}" 
-                        ${isAssigned ? 'disabled' : `onclick="assignHRToStudent(${studentId}, ${hr.id})"`}
-                    >
-                        <div class="hr-card-name">
-                            ${isAssigned ? '✓ ' : ''}${index + 1}. ${hr.full_name}
+            cardsContainer.innerHTML = filteredStudents.map(student => `
+                <div class="student-card">
+                    <div class="student-card-header">
+                        <div>
+                            <div class="student-card-name">${student.full_name || 'N/A'}</div>
+                            <div class="student-card-wapl-id">${student.wapl_id || 'N/A'}</div>
                         </div>
-                        <div class="hr-card-details">
-                            ${hr.company_name}<br>${hr.email}
+                        <span class="status-badge status-${student.account_status}">
+                            ${student.account_status || 'N/A'}
+                        </span>
+                    </div>
+                    
+                    <div class="student-card-info">
+                        <div class="info-row">
+                            <span class="info-label">📧 Email:</span>
+                            <span class="info-value">${student.email || 'N/A'}</span>
                         </div>
-                    </button>
-                `;
-            }).join('');
-
-            // Show panel
-            panelRow.style.display = 'table-row';
-            setTimeout(() => panel.classList.add('show'), 10);
+                        <div class="info-row">
+                            <span class="info-label">📱 Phone:</span>
+                            <span class="info-value">${student.phone || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">🏷️ Domains:</span>
+                            <span class="info-value">${student.domain_names || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">👔 HR:</span>
+                            <span class="info-value">
+                                ${student.assigned_hr_name ? 
+                                    `<span class="hr-badge hr-assigned">✓ ${student.assigned_hr_name}</span>` :
+                                    `<span class="hr-badge hr-not-assigned">Not Assigned</span>`
+                                }
+                            </span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">📅 Registered:</span>
+                            <span class="info-value">${formatDate(student.created_at || student.registration_date)}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="student-card-actions">
+                        <button class="btn-view" onclick="viewStudent(${student.id})" style="width: 100%;">
+                            👁️ View Details
+                        </button>
+                        ${student.account_status === 'pending' ? 
+                            `<button onclick="approveStudent(${student.id})" class="btn-view" style="background: #28a745; width: 100%;">✓ Approve</button>` : ''
+                        }
+                    </div>
+                </div>
+            `).join('');
         }
 
-        // Close HR panel
-        function closeHRPanel(studentId) {
-            const panelRow = document.getElementById(`hrPanelRow${studentId}`);
-            const panel = document.getElementById(`hrPanel${studentId}`);
-            
-            panel.classList.remove('show');
-            setTimeout(() => panelRow.style.display = 'none', 300);
-        }
-
-        // Toggle action menu
         function toggleActionMenu(event, studentId) {
             event.stopPropagation();
             document.querySelectorAll('.action-menu').forEach(menu => {
@@ -896,65 +987,12 @@
             document.getElementById(`actionMenu${studentId}`).classList.toggle('show');
         }
 
-        // Close dropdown when clicking outside
         document.addEventListener('click', () => {
             document.querySelectorAll('.action-menu').forEach(menu => {
                 menu.classList.remove('show');
             });
         });
 
-        // Assign HR to student
-        async function assignHRToStudent(studentId, hrId) {
-            const hr = allHRs.find(h => h.id === hrId);
-            if (!confirm(`Assign student to ${hr.full_name} (${hr.company_name})?`)) return;
-
-            try {
-                const response = await fetch('/api/admin/assign-students', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ hrId: hrId, studentIds: [studentId] })
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    alert('✅ ' + data.message);
-                    closeHRPanel(studentId);
-                    loadStudents();
-                } else {
-                    alert('❌ Error: ' + data.error);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred');
-            }
-        }
-
-        // Unassign HR
-        async function unassignHR(studentId) {
-            if (!confirm('Remove HR assignment from this student?')) return;
-
-            try {
-                const response = await fetch('/api/admin/unassign-students', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ studentIds: [studentId] })
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    alert('✅ ' + data.message);
-                    closeHRPanel(studentId);
-                    loadStudents();
-                } else {
-                    alert('❌ Error: ' + data.error);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred');
-            }
-        }
-
-        // Approve student
         async function approveStudent(studentId) {
             if (!confirm('Approve this student?')) return;
             try {
@@ -971,7 +1009,6 @@
             }
         }
 
-        // Suspend student
         async function suspendStudent(studentId) {
             if (!confirm('Suspend this student?')) return;
             try {
@@ -988,7 +1025,6 @@
             }
         }
 
-        // Activate student
         async function activateStudent(studentId) {
             if (!confirm('Activate this student?')) return;
             try {
@@ -1005,7 +1041,6 @@
             }
         }
 
-        // Delete student
         async function deleteStudent(studentId) {
             if (!confirm('⚠️ Are you sure you want to delete this student? This action cannot be undone!')) return;
             try {
@@ -1022,12 +1057,10 @@
             }
         }
 
-        // View student
         function viewStudent(studentId) {
             window.location.href = `/secure-admin-panel/wapl/student/${studentId}`;
         }
 
-        // Filter students
         function filterStudents() {
             const status = document.getElementById('statusFilter').value;
             const search = document.getElementById('searchInput').value.toLowerCase();
@@ -1046,27 +1079,22 @@
             displayStudents();
         }
 
-        // Format date - IMPROVED
         function formatDate(dateString) {
             if (!dateString) {
-                const today = new Date();
-                return today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                return new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
             }
             
             try {
                 const date = new Date(dateString);
                 if (isNaN(date.getTime())) {
-                    const today = new Date();
-                    return today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                    return new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
                 }
                 return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
             } catch (error) {
-                const today = new Date();
-                return today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                return new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
             }
         }
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
             checkSuperAdmin();
             await loadHRs();
@@ -1075,4 +1103,3 @@
     </script>
 </body>
 </html>
-    

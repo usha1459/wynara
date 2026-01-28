@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Admin Dashboard - WAPL</title>
-    <link rel="stylesheet" href="/static/css/admin.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * {
@@ -23,6 +22,31 @@
             min-height: 100vh;
         }
 
+        /* Hamburger Menu Button */
+        .hamburger-btn {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1001;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .hamburger-btn span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background: white;
+            margin: 5px 0;
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
         /* Sidebar */
         .sidebar {
             width: 250px;
@@ -32,6 +56,8 @@
             position: fixed;
             height: 100vh;
             overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 1000;
         }
 
         .logo {
@@ -81,6 +107,7 @@
             margin-left: 250px;
             padding: 30px;
             width: calc(100% - 250px);
+            transition: margin-left 0.3s ease, width 0.3s ease;
         }
 
         /* Header with Role Badge */
@@ -100,6 +127,7 @@
             display: flex;
             align-items: center;
             gap: 20px;
+            flex-wrap: wrap;
         }
 
         .admin-info h1 {
@@ -172,26 +200,15 @@
             color: #333;
         }
 
-        .stat-card.pending {
-            border-left-color: #ffc107;
-        }
-
-        .stat-card.active {
-            border-left-color: #28a745;
-        }
-
-        .stat-card.suspended {
-            border-left-color: #dc3545;
-        }
-
-        .stat-card.info {
-            border-left-color: #17a2b8;
-        }
+        .stat-card.pending { border-left-color: #ffc107; }
+        .stat-card.active { border-left-color: #28a745; }
+        .stat-card.suspended { border-left-color: #dc3545; }
+        .stat-card.info { border-left-color: #17a2b8; }
 
         /* Charts Section */
         .charts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -207,16 +224,6 @@
             font-size: 18px;
             margin-bottom: 20px;
             color: #333;
-        }
-
-        .chart-placeholder {
-            height: 300px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f8f9fa;
-            border-radius: 8px;
-            color: #999;
         }
 
         .chart-container {
@@ -265,20 +272,126 @@
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
+        /* Mobile Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
         }
 
-        .btn-secondary:hover {
-            background: #5a6268;
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .hamburger-btn {
+                display: block;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 80px 15px 15px;
+            }
+
+            .admin-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 15px 20px;
+                gap: 10px;
+            }
+
+            .admin-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                width: 100%;
+            }
+
+            .admin-info h1 {
+                font-size: 22px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 15px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-card .number {
+                font-size: 28px;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-info h1 {
+                font-size: 18px;
+            }
+
+            .stat-card h3 {
+                font-size: 11px;
+            }
+
+            .stat-card .number {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" onclick="toggleSidebar()">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
     <div class="admin-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="logo">
                 <h2>🎓 WAPL Admin</h2>
             </div>
@@ -432,7 +545,7 @@
             <!-- Recruitment Charts -->
             <div class="charts-grid" style="margin-top: 30px;">
                 <div class="chart-card">
-                    <h2> HR Performance</h2>
+                    <h2>HR Performance</h2>
                     <div class="chart-container">
                         <canvas id="hrPerformanceChart"></canvas>
                     </div>
@@ -469,6 +582,30 @@
     <script>
         let isSuperAdmin = false;
 
+        // Sidebar Toggle Functions
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        // Close sidebar when clicking menu item on mobile
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    closeSidebar();
+                }
+            });
+        });
+
         // Check if super admin and update UI
         async function checkAdminRole() {
             try {
@@ -477,13 +614,11 @@
                 
                 isSuperAdmin = data.is_super_admin;
                 
-                // Update role badge
                 const roleBadge = document.getElementById('roleBadge');
                 if (isSuperAdmin) {
                     roleBadge.textContent = '⭐ SUPER ADMIN';
                     roleBadge.className = 'role-badge super-admin';
                     
-                    // Show super admin menu items
                     document.getElementById('domainsLink').style.display = 'flex';
                     document.getElementById('adminsLink').style.display = 'flex';
                     document.getElementById('manageDomainsBtn').style.display = 'inline-flex';
@@ -510,7 +645,6 @@
                 const response = await fetch('/api/admin/dashboard/stats');
                 const data = await response.json();
                 
-                // Update statistics
                 document.getElementById('totalStudents').textContent = data.total_students || 0;
                 document.getElementById('pendingStudents').textContent = data.pending_students || 0;
                 document.getElementById('activeStudents').textContent = data.active_students || 0;
@@ -522,7 +656,6 @@
                 
                 console.log('✅ Dashboard stats loaded:', data);
                 
-                // Wait for Chart.js to be available
                 if (typeof Chart === 'undefined') {
                     console.warn('⚠️ Chart.js not loaded yet, retrying in 500ms...');
                     setTimeout(() => {
@@ -550,17 +683,12 @@
             }
         }
 
-        // Status Chart - Pie chart showing Pending vs Active vs Suspended
         let statusChartInstance = null;
         async function renderStatusChart(statsData) {
             try {
                 const ctx = document.getElementById('statusChart');
-                if (!ctx) {
-                    console.warn('⚠️ statusChart canvas not found');
-                    return;
-                }
+                if (!ctx) return;
 
-                // Destroy previous chart if exists
                 if (statusChartInstance) {
                     statusChartInstance.destroy();
                 }
@@ -569,19 +697,13 @@
                 const active = statsData.active_students || 0;
                 const suspended = statsData.suspended_students || 0;
 
-                console.log('📊 Creating status chart:', { pending, active, suspended });
-
                 statusChartInstance = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
                         labels: ['Pending', 'Active', 'Suspended'],
                         datasets: [{
                             data: [pending, active, suspended],
-                            backgroundColor: [
-                                '#FFC107',  // Pending - Amber
-                                '#28A745',  // Active - Green
-                                '#DC3545'   // Suspended - Red
-                            ],
+                            backgroundColor: ['#FFC107', '#28A745', '#DC3545'],
                             borderColor: '#fff',
                             borderWidth: 2
                         }]
@@ -600,26 +722,20 @@
                         }
                     }
                 });
-                console.log('✅ Status chart created');
             } catch (error) {
                 console.error('❌ Error creating status chart:', error);
             }
         }
 
-        // Domain Chart - Bar chart showing students per domain
         let domainChartInstance = null;
         async function renderDomainChart() {
             try {
                 const ctx = document.getElementById('domainChart');
-                if (!ctx) {
-                    console.warn('⚠️ domainChart canvas not found');
-                    return;
-                }
+                if (!ctx) return;
 
                 const response = await fetch('/api/admin/students');
                 const students = await response.json();
 
-                // Count students by domain
                 const domainCounts = {};
                 students.forEach(student => {
                     if (student.domain_names) {
@@ -631,19 +747,13 @@
                     }
                 });
 
-                // Destroy previous chart if exists
                 if (domainChartInstance) {
                     domainChartInstance.destroy();
                 }
 
                 const labels = Object.keys(domainCounts);
                 const data = Object.values(domainCounts);
-                const colors = [
-                    '#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe',
-                    '#43e97b', '#fa709a', '#fee140', '#30cfd0', '#330867'
-                ];
-
-                console.log('📊 Creating domain chart:', { labels, data });
+                const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe', '#43e97b', '#fa709a', '#fee140', '#30cfd0', '#330867'];
 
                 domainChartInstance = new Chart(ctx, {
                     type: 'bar',
@@ -675,38 +785,27 @@
                         }
                     }
                 });
-                console.log('✅ Domain chart created');
             } catch (error) {
                 console.error('❌ Error rendering domain chart:', error);
             }
         }
 
-        // HR Chart - Bar chart showing assigned students per HR
         let hrChartInstance = null;
         async function renderHrChart() {
             try {
                 const ctx = document.getElementById('hrChart');
-                if (!ctx) {
-                    console.warn('⚠️ hrChart canvas not found');
-                    return;
-                }
+                if (!ctx) return;
 
                 const response = await fetch('/api/admin/hrs');
                 const hrs = await response.json();
 
-                // Destroy previous chart if exists
                 if (hrChartInstance) {
                     hrChartInstance.destroy();
                 }
 
                 const labels = hrs.map(hr => hr.full_name || 'Unknown');
                 const data = hrs.map(hr => hr.assigned_count || 0);
-                const colors = [
-                    '#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe',
-                    '#43e97b', '#fa709a', '#fee140', '#30cfd0', '#330867'
-                ];
-
-                console.log('📊 Creating HR chart:', { labels, data });
+                const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe', '#43e97b', '#fa709a', '#fee140', '#30cfd0', '#330867'];
 
                 hrChartInstance = new Chart(ctx, {
                     type: 'bar',
@@ -737,21 +836,17 @@
                         }
                     }
                 });
-                console.log('✅ HR chart created');
             } catch (error) {
                 console.error('❌ Error rendering HR chart:', error);
             }
         }
 
-        // Recruitment Functions
         let hrPerformanceChart = null;
-
         async function loadRecruitmentStats() {
             try {
                 const response = await fetch('/api/admin/recruitment/summary');
                 const data = await response.json();
                 
-                // Update recruitment cards
                 document.getElementById('recruitmentTotal').textContent = data.total_students_in_pipeline || 0;
                 document.getElementById('recruitmentViewed').textContent = data.shortlisted || 0;
                 document.getElementById('recruitmentShortlisted').textContent = data.shortlisted || 0;
@@ -759,9 +854,6 @@
                 document.getElementById('recruitmentSelected').textContent = data.selected || 0;
                 document.getElementById('recruitmentRejected').textContent = data.rejected || 0;
                 
-                console.log('✅ Recruitment stats loaded:', data);
-                
-                // Render recruitment charts
                 renderHrPerformance(data);
                 
             } catch (error) {
@@ -772,10 +864,7 @@
         function renderHrPerformance(data) {
             try {
                 const ctx = document.getElementById('hrPerformanceChart');
-                if (!ctx) {
-                    console.warn('⚠️ hrPerformanceChart canvas not found');
-                    return;
-                }
+                if (!ctx) return;
 
                 if (hrPerformanceChart) {
                     hrPerformanceChart.destroy();
@@ -829,16 +918,13 @@
                         }
                     }
                 });
-                console.log('✅ HR performance chart created');
             } catch (error) {
                 console.error('❌ Error rendering HR performance chart:', error);
             }
         }
 
-        // Initialize dashboard
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 Dashboard loading...');
-            console.log('Chart.js available:', typeof Chart !== 'undefined');
             checkAdminRole();
             loadStats();
         });

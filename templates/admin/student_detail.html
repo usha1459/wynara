@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Student Detail - WAPL Admin</title>
     <style>
         * {
@@ -21,6 +21,30 @@
             min-height: 100vh;
         }
 
+        /* Hamburger Menu Button */
+        .hamburger-btn {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1001;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .hamburger-btn span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background: white;
+            margin: 5px 0;
+            border-radius: 2px;
+        }
+
         /* Sidebar */
         .sidebar {
             width: 250px;
@@ -30,6 +54,8 @@
             position: fixed;
             height: 100vh;
             overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 1000;
         }
 
         .logo {
@@ -79,6 +105,7 @@
             margin-left: 250px;
             padding: 30px;
             width: calc(100% - 250px);
+            transition: margin-left 0.3s ease, width 0.3s ease;
         }
 
         .admin-header {
@@ -105,6 +132,10 @@
             cursor: pointer;
             font-weight: bold;
             transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .btn-back {
@@ -121,17 +152,9 @@
             color: white;
         }
 
-        .btn-primary:hover {
-            background: #5568d3;
-        }
-
         .btn-danger {
             background: #dc3545;
             color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
         }
 
         .btn-warning {
@@ -139,17 +162,9 @@
             color: #333;
         }
 
-        .btn-warning:hover {
-            background: #e0a800;
-        }
-
         .btn-success {
             background: #28a745;
             color: white;
-        }
-
-        .btn-success:hover {
-            background: #218838;
         }
 
         .content-card {
@@ -167,6 +182,8 @@
             margin-bottom: 30px;
             padding-bottom: 20px;
             border-bottom: 2px solid #e2e8f0;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .student-name-section h2 {
@@ -188,6 +205,7 @@
             font-weight: bold;
             font-size: 12px;
             text-transform: uppercase;
+            white-space: nowrap;
         }
 
         .status-active {
@@ -203,11 +221,6 @@
         .status-suspended {
             background: #fee2e2;
             color: #991b1b;
-        }
-
-        .status-revoked {
-            background: #e5e7eb;
-            color: #374151;
         }
 
         .section {
@@ -229,12 +242,6 @@
             gap: 20px;
         }
 
-        @media (max-width: 768px) {
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
         .info-item {
             background: #f8fafc;
             padding: 15px;
@@ -253,7 +260,7 @@
         .info-value {
             font-size: 16px;
             color: #1e293b;
-            word-break: break-all;
+            word-break: break-word;
         }
 
         .action-buttons {
@@ -263,77 +270,12 @@
             margin-top: 20px;
         }
 
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #64748b;
-        }
-
-        .error-message {
-            background: #fee2e2;
-            color: #991b1b;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #dc3545;
-        }
-
-        .success-message {
-            background: #d1fae5;
-            color: #065f46;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #28a745;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-
-        .modal.show {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background-color: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            max-width: 500px;
-            width: 90%;
-        }
-
-        .modal-header {
-            font-size: 20px;
-            font-weight: bold;
-            color: #1e293b;
-            margin-bottom: 15px;
-        }
-
-        .modal-body {
-            margin-bottom: 20px;
-            color: #64748b;
-        }
-
-        .modal-footer {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-
         .profile-header-section {
             display: flex;
             gap: 30px;
             align-items: flex-start;
             margin-bottom: 30px;
+            flex-wrap: wrap;
         }
 
         .profile-picture-container {
@@ -359,6 +301,7 @@
 
         .profile-info-section {
             flex-grow: 1;
+            min-width: 250px;
         }
 
         .resume-section {
@@ -383,6 +326,7 @@
             background: white;
             border-radius: 8px;
             border: 1px solid #e2e8f0;
+            flex-wrap: wrap;
         }
 
         .resume-file-icon {
@@ -391,12 +335,14 @@
 
         .resume-file-info {
             flex-grow: 1;
+            min-width: 150px;
         }
 
         .resume-file-name {
             font-weight: bold;
             color: #1e293b;
             margin-bottom: 5px;
+            word-break: break-all;
         }
 
         .resume-file-size {
@@ -415,6 +361,7 @@
             text-decoration: none;
             display: inline-block;
             transition: all 0.3s;
+            white-space: nowrap;
         }
 
         .resume-download-btn:hover {
@@ -429,12 +376,199 @@
             color: #64748b;
             text-align: center;
         }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        /* Sidebar Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .hamburger-btn {
+                display: block;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 80px 15px 15px;
+            }
+
+            .admin-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 15px 20px;
+                gap: 10px;
+            }
+
+            .admin-header h1 {
+                font-size: 20px;
+            }
+
+            .btn-back {
+                font-size: 13px;
+                padding: 8px 16px;
+            }
+
+            .content-card {
+                padding: 20px 15px;
+            }
+
+            .student-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .student-name-section h2 {
+                font-size: 22px;
+            }
+
+            .profile-header-section {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .profile-picture-container {
+                width: 100%;
+                display: flex;
+                justify-content: center;
+            }
+
+            .profile-picture,
+            .profile-picture.placeholder {
+                width: 120px;
+                height: 120px;
+                font-size: 50px;
+            }
+
+            .profile-info-section {
+                width: 100%;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .resume-file {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .resume-download-btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .section-title {
+                font-size: 16px;
+            }
+
+            .modal-content {
+                margin: 10% auto;
+                padding: 20px 15px;
+                width: 95%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 70px 10px 10px;
+            }
+
+            .admin-header h1 {
+                font-size: 18px;
+            }
+
+            .content-card {
+                padding: 15px 10px;
+            }
+
+            .student-name-section h2 {
+                font-size: 20px;
+            }
+
+            .info-item {
+                padding: 12px;
+            }
+
+            .info-label {
+                font-size: 11px;
+            }
+
+            .info-value {
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" onclick="toggleSidebar()">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
     <div class="admin-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="logo">
                 <h2>🎓 WAPL Admin</h2>
             </div>
@@ -471,12 +605,13 @@
     <!-- HR Assignment Modal -->
     <div id="hrModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">Assign to HR</div>
-            <div class="modal-body">
-                <div id="hrList" style="max-height: 300px; overflow-y: auto;"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0;">Assign to HR</h2>
+                <button onclick="closeHRModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-back" onclick="closeHRModal()">Cancel</button>
+            <div id="hrList" style="max-height: 300px; overflow-y: auto;"></div>
+            <div style="margin-top: 20px;">
+                <button class="btn btn-back" onclick="closeHRModal()" style="width: 100%;">Cancel</button>
             </div>
         </div>
     </div>
@@ -486,12 +621,30 @@
         let studentData = null;
         let allHRs = [];
 
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.querySelector('.sidebar-overlay').classList.remove('active');
+        }
+
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    closeSidebar();
+                }
+            });
+        });
+
         async function loadStudentDetail() {
             try {
                 const response = await fetch(`/api/admin/student/${studentId}`);
                 if (!response.ok) {
                     document.getElementById('contentArea').innerHTML = 
-                        '<div class="content-card"><div class="error-message">❌ Student not found</div></div>';
+                        '<div class="content-card"><div style="color: #dc2626; padding: 20px; text-align: center;">❌ Student not found</div></div>';
                     return;
                 }
 
@@ -501,7 +654,7 @@
             } catch (error) {
                 console.error('Error loading student:', error);
                 document.getElementById('contentArea').innerHTML = 
-                    '<div class="content-card"><div class="error-message">❌ Error loading student details</div></div>';
+                    '<div class="content-card"><div style="color: #dc2626; padding: 20px; text-align: center;">❌ Error loading student details</div></div>';
             }
         }
 
@@ -523,18 +676,14 @@
                 </div>` : 
                 '<div class="info-item"><div class="info-label">Assigned HR</div><div class="info-value">Not Assigned</div></div>';
 
-            // Profile picture - extract just the filename if full path is provided
             let profilePic = null;
             if (studentData.profile_pic) {
-                // Get just the filename (last part after all slashes/backslashes)
                 let profileName = studentData.profile_pic.split('/').pop().split('\\').pop();
                 profilePic = `/uploads/profile_pics/${profileName}`;
             }
 
-            // Resume section
             let resumeHTML = '';
             if (studentData.resume) {
-                // Get just the filename (last part after all slashes/backslashes)
                 let resumeFile = studentData.resume.split('/').pop().split('\\').pop();
                 const resumePath = `/download/resumes/${resumeFile}`;
                 const resumeName = resumeFile.split('_').pop();
@@ -765,18 +914,23 @@
             }
 
             const hrListHTML = allHRs.map(hr => `
-                <div style="padding: 10px; border-bottom: 1px solid #e2e8f0; cursor: pointer;" onclick="assignHR(${hr.id}, '${hr.full_name}')">
-                    <strong>${hr.full_name}</strong><br>
-                    <small>${hr.company_name} - ${hr.email}</small>
+                <div style="padding: 12px; border-bottom: 1px solid #e2e8f0; cursor: pointer; transition: background 0.2s;" 
+                     onclick="assignHR(${hr.id}, '${hr.full_name}')"
+                     onmouseover="this.style.background='#f8fafc'"
+                     onmouseout="this.style.background='white'">
+                    <strong style="display: block; margin-bottom: 5px;">${hr.full_name}</strong>
+                    <small style="color: #64748b;">${hr.company_name} - ${hr.email}</small>
                 </div>
             `).join('');
 
             document.getElementById('hrList').innerHTML = hrListHTML;
-            document.getElementById('hrModal').classList.add('show');
+            document.getElementById('hrModal').style.display = 'flex';
+            document.getElementById('hrModal').style.alignItems = 'center';
+            document.getElementById('hrModal').style.justifyContent = 'center';
         }
 
         function closeHRModal() {
-            document.getElementById('hrModal').classList.remove('show');
+            document.getElementById('hrModal').style.display = 'none';
         }
 
         async function assignHR(hrId, hrName) {

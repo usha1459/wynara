@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Admin Login - WAPL</title>
     <style>
         * {
@@ -24,10 +24,22 @@
         .login-container {
             background: white;
             padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            max-width: 400px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 450px;
             width: 100%;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .logo-section {
@@ -50,11 +62,12 @@
             display: inline-block;
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 12px;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 13px;
             font-weight: bold;
             margin-bottom: 20px;
+            letter-spacing: 1px;
         }
 
         .form-group {
@@ -72,44 +85,56 @@
         input[type="email"],
         input[type="password"] {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
+            border-radius: 8px;
+            font-size: 15px;
             transition: border-color 0.3s;
+            -webkit-appearance: none;
+            appearance: none;
         }
 
         input:focus {
             outline: none;
             border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .btn {
             width: 100%;
-            padding: 14px;
+            padding: 16px;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s;
             background-color: #667eea;
             color: white;
+            touch-action: manipulation;
         }
 
         .btn:hover:not(:disabled) {
             background-color: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
         }
 
         .btn:disabled {
             background-color: #ccc;
             cursor: not-allowed;
+            transform: none;
         }
 
         .back-link {
             text-align: center;
             margin-top: 20px;
             color: #666;
+            font-size: 14px;
         }
 
         .back-link a {
@@ -125,30 +150,94 @@
         .error-message {
             background-color: #fee;
             color: #c33;
-            padding: 10px;
-            border-radius: 5px;
+            padding: 12px;
+            border-radius: 8px;
             margin-bottom: 20px;
             display: none;
             text-align: center;
+            font-size: 14px;
+            border-left: 4px solid #dc3545;
         }
 
         .success-message {
             background-color: #efe;
             color: #3c3;
-            padding: 10px;
-            border-radius: 5px;
+            padding: 12px;
+            border-radius: 8px;
             margin-bottom: 20px;
             display: none;
             text-align: center;
+            font-size: 14px;
+            border-left: 4px solid #28a745;
         }
 
         .security-note {
             background-color: #fff3cd;
             border-left: 4px solid #ffc107;
-            padding: 10px;
+            padding: 12px;
             margin-bottom: 20px;
-            font-size: 12px;
+            font-size: 13px;
             color: #856404;
+            border-radius: 4px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+
+            .logo-section h1 {
+                font-size: 24px;
+            }
+
+            .logo-section .subtitle {
+                font-size: 13px;
+            }
+
+            .admin-badge {
+                font-size: 12px;
+                padding: 6px 16px;
+            }
+
+            input[type="email"],
+            input[type="password"] {
+                padding: 12px;
+                font-size: 16px; /* Prevents iOS zoom on focus */
+            }
+
+            .btn {
+                padding: 14px;
+                font-size: 15px;
+            }
+
+            label {
+                font-size: 13px;
+            }
+
+            .security-note {
+                font-size: 12px;
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .login-container {
+                padding: 25px 15px;
+            }
+
+            .logo-section h1 {
+                font-size: 22px;
+            }
+        }
+
+        /* Prevent zoom on iOS devices */
+        @supports (-webkit-touch-callout: none) {
+            input[type="email"],
+            input[type="password"] {
+                font-size: 16px;
+            }
         }
     </style>
 </head>
@@ -170,12 +259,12 @@
         <form id="loginForm">
             <div class="form-group">
                 <label for="email">Admin Email</label>
-                <input type="email" id="email" placeholder="Enter your Email Address" required autofocus>
+                <input type="email" id="email" placeholder="Enter your Email Address" required autofocus autocomplete="email">
             </div>
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" placeholder="Enter your password" required>
+                <input type="password" id="password" placeholder="Enter your password" required autocomplete="current-password">
             </div>
 
             <button type="submit" id="submitBtn" class="btn">Login as Admin</button>
@@ -187,7 +276,6 @@
     </div>
 
     <script>
-        // Show error message
         function showError(message) {
             const errorDiv = document.getElementById('errorMessage');
             errorDiv.textContent = message;
@@ -199,7 +287,6 @@
             }, 5000);
         }
 
-        // Show success message
         function showSuccess(message) {
             const successDiv = document.getElementById('successMessage');
             successDiv.textContent = message;
@@ -207,37 +294,32 @@
             document.getElementById('errorMessage').style.display = 'none';
         }
 
-        // Handle login form submission
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Hide previous messages
             document.getElementById('errorMessage').style.display = 'none';
             document.getElementById('successMessage').style.display = 'none';
             
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             
-            // Validation
             if (!email || !password) {
                 showError('Please enter both email and password');
                 return;
             }
 
-            // Email validation
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
                 showError('Please enter a valid email address');
                 return;
             }
             
-            // Disable submit button
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Logging in...';
             
             try {
-                const response = await fetch('/api/admin/login', {  // ✅ FIXED: Correct URL
+                const response = await fetch('/api/admin/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -253,12 +335,10 @@
                 if (response.ok) {
                     showSuccess('✅ Login successful! Redirecting...');
                     
-                    // Show super admin status if applicable
                     if (data.is_super_admin) {
                         console.log('🔑 Logged in as Super Admin');
                     }
                     
-                    // Redirect after 1 second
                     setTimeout(() => {
                         window.location.href = data.redirect || '/secure-admin-panel/wapl/dashboard';
                     }, 1000);
@@ -275,7 +355,6 @@
             }
         });
 
-        // Allow Enter key to submit
         document.getElementById('password').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 document.getElementById('loginForm').dispatchEvent(new Event('submit'));

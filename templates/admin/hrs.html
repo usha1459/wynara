@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HR Management - WAPL Admin</title>
     <style>
         * {
@@ -21,6 +21,30 @@
             min-height: 100vh;
         }
 
+        /* Hamburger Menu Button */
+        .hamburger-btn {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1001;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .hamburger-btn span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background: white;
+            margin: 5px 0;
+            border-radius: 2px;
+        }
+
         /* Sidebar */
         .sidebar {
             width: 250px;
@@ -30,6 +54,8 @@
             position: fixed;
             height: 100vh;
             overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 1000;
         }
 
         .logo {
@@ -79,9 +105,9 @@
             margin-left: 250px;
             padding: 30px;
             width: calc(100% - 250px);
+            transition: margin-left 0.3s ease, width 0.3s ease;
         }
 
-        /* Header with Role Badge */
         .admin-header {
             display: flex;
             justify-content: space-between;
@@ -127,7 +153,6 @@
             border: 2px solid #fff;
         }
 
-        /* Content Card */
         .content-card {
             background: white;
             padding: 25px;
@@ -140,6 +165,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .btn {
@@ -180,7 +207,6 @@
             color: white;
         }
 
-        /* Filter Section */
         .filter-section {
             display: flex;
             gap: 20px;
@@ -200,6 +226,7 @@
             border-radius: 8px;
             font-size: 14px;
             width: 350px;
+            max-width: 100%;
             transition: border-color 0.3s;
         }
 
@@ -208,7 +235,7 @@
             border-color: #667eea;
         }
 
-        /* Table */
+        /* Table for Desktop */
         .table-container {
             overflow-x: auto;
         }
@@ -216,6 +243,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 900px;
         }
 
         th {
@@ -236,68 +264,78 @@
             background-color: #f8f9fa;
         }
 
-        /* Action Buttons */
         .action-buttons {
             display: flex;
             gap: 5px;
             flex-wrap: wrap;
         }
 
-        /* Dropdown for Assign Students */
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        .dropdown-content {
+        /* Mobile Card View */
+        .hr-cards {
             display: none;
-            position: absolute;
-            background-color: white;
-            min-width: 280px;
-            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
-            z-index: 1000;
-            border-radius: 8px;
-            max-height: 350px;
-            overflow-y: auto;
-            right: 0;
         }
 
-        .dropdown-content.show {
-            display: block;
+        .hr-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
-        .dropdown-item {
-            padding: 12px 16px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-            transition: background 0.2s;
+        .hr-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f5f9;
         }
 
-        .dropdown-item:hover {
-            background-color: #f8f9fa;
+        .hr-card-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 5px;
         }
 
-        .dropdown-item:last-child {
-            border-bottom: none;
+        .hr-card-company {
+            font-size: 14px;
+            color: #667eea;
         }
 
-        .dropdown-item strong {
-            display: block;
-            color: #333;
-            margin-bottom: 3px;
+        .hr-card-info {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
-        .dropdown-item small {
-            color: #666;
-            font-size: 12px;
+        .info-row {
+            display: flex;
+            align-items: start;
+            gap: 8px;
+            font-size: 14px;
         }
 
-        .dropdown-item.disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
+        .info-label {
+            color: #64748b;
+            font-weight: 500;
+            min-width: 80px;
         }
 
-        /* Modal */
+        .info-value {
+            color: #1e293b;
+            word-break: break-word;
+        }
+
+        .hr-card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -368,16 +406,143 @@
             margin-bottom: 10px;
         }
 
-        .empty-state p {
-            font-size: 16px;
-            color: #999;
+        /* Sidebar Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .hamburger-btn {
+                display: block;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 80px 15px 15px;
+            }
+
+            .admin-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 15px 20px;
+                gap: 10px;
+            }
+
+            .admin-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .admin-info h1 {
+                font-size: 22px;
+            }
+
+            .content-card {
+                padding: 20px 15px;
+            }
+
+            .header-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .header-section h2 {
+                font-size: 18px;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-section input[type="text"] {
+                width: 100%;
+            }
+
+            /* Hide table, show cards */
+            .table-container {
+                display: none;
+            }
+
+            .hr-cards {
+                display: block;
+            }
+
+            .modal-content {
+                margin: 10% auto;
+                padding: 20px 15px;
+                width: 95%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 70px 10px 10px;
+            }
+
+            .admin-info h1 {
+                font-size: 18px;
+            }
+
+            .content-card {
+                padding: 15px 10px;
+            }
+
+            .hr-card {
+                padding: 15px;
+            }
+
+            .hr-card-name {
+                font-size: 16px;
+            }
+
+            .form-group input {
+                font-size: 16px; /* Prevents iOS zoom */
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" onclick="toggleSidebar()">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
     <div class="admin-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="logo">
                 <h2>🎓 WAPL Admin</h2>
             </div>
@@ -411,7 +576,7 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Header with Role Badge -->
+            <!-- Header -->
             <div class="admin-header">
                 <div class="admin-info">
                     <h1>HR Management</h1>
@@ -432,7 +597,7 @@
                     <input type="text" id="searchInput" placeholder="Search by name, email, company..." onkeyup="filterHRs()">
                 </div>
 
-                <!-- HRs Table -->
+                <!-- Desktop Table View -->
                 <div class="table-container">
                     <table>
                         <thead>
@@ -457,6 +622,11 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Mobile Card View -->
+                <div class="hr-cards" id="hrCards">
+                    <!-- Cards will be generated here -->
                 </div>
             </div>
         </main>
@@ -499,15 +669,30 @@
 
     <script>
         let allHRs = [];
-        let allStudents = [];
 
-        // Check if super admin and show/hide menu items
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.querySelector('.sidebar-overlay').classList.remove('active');
+        }
+
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    closeSidebar();
+                }
+            });
+        });
+
         async function checkSuperAdmin() {
             try {
                 const response = await fetch('/api/admin/check-super-admin');
                 const data = await response.json();
                 
-                // Update role badge
                 const roleBadge = document.getElementById('roleBadge');
                 if (data.is_super_admin) {
                     roleBadge.textContent = '⭐ SUPER ADMIN';
@@ -523,7 +708,6 @@
             }
         }
 
-        // Load all HRs
         async function loadHRs() {
             try {
                 const response = await fetch('/api/admin/hrs');
@@ -536,19 +720,12 @@
             }
         }
 
-        // Load all students
-        async function loadStudents() {
-            try {
-                const response = await fetch('/api/admin/students');
-                allStudents = await response.json();
-                console.log('Students loaded:', allStudents.length);
-            } catch (error) {
-                console.error('Error loading students:', error);
-            }
+        function displayHRs(hrs) {
+            displayTableView(hrs);
+            displayCardView(hrs);
         }
 
-        // Display HRs in table
-        function displayHRs(hrs) {
+        function displayTableView(hrs) {
             const tbody = document.getElementById('hrsTableBody');
             
             if (hrs.length === 0) {
@@ -566,14 +743,6 @@
                     <td>${formatDate(hr.created_at)}</td>
                     <td>
                         <div class="action-buttons">
-                            <div class="dropdown">
-                                <button onclick="toggleStudentDropdown(${hr.id}, event)" class="btn btn-sm btn-primary">
-                                    👨‍🎓 Assign Students
-                                </button>
-                                <div id="student-dropdown-${hr.id}" class="dropdown-content">
-                                    <!-- Content generated on click -->
-                                </div>
-                            </div>
                             <button onclick="viewHR(${hr.id})" class="btn btn-sm btn-secondary">👁️ View</button>
                             <button onclick="deleteHR(${hr.id}, '${hr.full_name}')" class="btn btn-sm btn-danger">🗑️ Delete</button>
                         </div>
@@ -582,154 +751,50 @@
             `).join('');
         }
 
-        // Generate student dropdown HTML
-        function generateStudentDropdown(hrId) {
-            console.log('Generating student dropdown. Students available:', allStudents.length);
+        function displayCardView(hrs) {
+            const cardsContainer = document.getElementById('hrCards');
             
-            if (!allStudents || allStudents.length === 0) {
-                return '<div class="dropdown-item" style="padding: 12px; text-align: center; color: #999;">No students available</div>';
-            }
-
-            let html = '';
-            
-            // Get students assigned to this HR
-            const assignedStudents = allStudents.filter(s => s.assigned_hr_id === hrId);
-            const unassignedStudents = allStudents.filter(s => !s.assigned_hr_id || s.assigned_hr_id !== hrId);
-            
-            // Show assigned students with unassign option
-            if (assignedStudents.length > 0) {
-                html += '<div style="padding: 8px 12px; background: #f8f9fa; font-weight: bold; font-size: 11px; color: #666;">ASSIGNED STUDENTS</div>';
-                assignedStudents.forEach(student => {
-                    html += `<div class="dropdown-item" onclick="unassignStudentFromHR(${student.id}, ${hrId}, event)">
-                        <strong>✓ ${student.full_name}</strong>
-                        <small>${student.wapl_id} - ${student.email}</small>
-                        <small style="color: #dc3545; display: block; margin-top: 3px;">Click to unassign</small>
-                    </div>`;
-                });
-            }
-            
-            // Show unassigned students
-            if (unassignedStudents.length > 0) {
-                if (assignedStudents.length > 0) {
-                    html += '<div style="padding: 8px 12px; background: #f8f9fa; font-weight: bold; font-size: 11px; color: #666; margin-top: 5px;">AVAILABLE STUDENTS</div>';
-                }
-                unassignedStudents.forEach(student => {
-                    html += `<div class="dropdown-item" onclick="assignStudentToHR(${student.id}, ${hrId}, event)">
-                        <strong>${student.full_name}</strong>
-                        <small>${student.wapl_id} - ${student.email}</small>
-                        ${student.assigned_hr_id ? '<small style="color: #856404; display: block;">Assigned to another HR</small>' : ''}
-                    </div>`;
-                });
-            }
-            
-            if (html === '') {
-                html = '<div class="dropdown-item" style="padding: 12px; text-align: center; color: #999;">No students available</div>';
-            }
-
-            return html;
-        }
-
-        // Toggle student dropdown
-        function toggleStudentDropdown(hrId, event) {
-            event.stopPropagation();
-            
-            // Close all other dropdowns
-            document.querySelectorAll('.dropdown-content').forEach(dd => {
-                if (dd.id !== `student-dropdown-${hrId}`) {
-                    dd.classList.remove('show');
-                }
-            });
-
-            // Get current dropdown
-            const dropdown = document.getElementById(`student-dropdown-${hrId}`);
-            
-            // Regenerate dropdown content with current students
-            dropdown.innerHTML = generateStudentDropdown(hrId);
-            
-            // Toggle visibility
-            dropdown.classList.toggle('show');
-        }
-
-        // Close dropdowns when clicking outside
-        window.onclick = function(event) {
-            if (!event.target.matches('.btn-primary') && !event.target.matches('.btn-sm')) {
-                document.querySelectorAll('.dropdown-content').forEach(dd => {
-                    dd.classList.remove('show');
-                });
-            }
-        }
-
-        // Assign student to HR
-        async function assignStudentToHR(studentId, hrId, event) {
-            if (event) event.stopPropagation();
-            
-            const student = allStudents.find(s => s.id === studentId);
-            const hr = allHRs.find(h => h.id === hrId);
-            
-            if (!confirm(`Assign "${student.full_name}" to ${hr.full_name} (${hr.company_name})?`)) {
+            if (hrs.length === 0) {
+                cardsContainer.innerHTML = '<div class="empty-state"><h3>📭 No HRs found</h3><p>Create a new HR account to get started</p></div>';
                 return;
             }
 
-            try {
-                const response = await fetch('/api/admin/assign-students', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        hrId: hrId,
-                        studentIds: [studentId]
-                    })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    alert('✅ ' + data.message);
-                    await loadStudents(); // Reload students to update assignment
-                    loadHRs(); // Reload HRs
-                } else {
-                    alert('❌ Error: ' + data.error);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred');
-            }
+            cardsContainer.innerHTML = hrs.map(hr => `
+                <div class="hr-card">
+                    <div class="hr-card-header">
+                        <div>
+                            <div class="hr-card-name">${hr.full_name || 'N/A'}</div>
+                            <div class="hr-card-company">${hr.company_name || 'N/A'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="hr-card-info">
+                        <div class="info-row">
+                            <span class="info-label">📧 Email:</span>
+                            <span class="info-value">${hr.email || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">📱 Phone:</span>
+                            <span class="info-value">${hr.phone || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">💼 Designation:</span>
+                            <span class="info-value">${hr.designation || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">📅 Created:</span>
+                            <span class="info-value">${formatDate(hr.created_at)}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="hr-card-actions">
+                        <button onclick="viewHR(${hr.id})" class="btn btn-secondary" style="flex: 1;">👁️ View</button>
+                        <button onclick="deleteHR(${hr.id}, '${hr.full_name}')" class="btn btn-danger" style="flex: 1;">🗑️ Delete</button>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        // Unassign student from HR
-        async function unassignStudentFromHR(studentId, hrId, event) {
-            if (event) event.stopPropagation();
-            
-            const student = allStudents.find(s => s.id === studentId);
-            
-            if (!confirm(`Unassign "${student.full_name}" from this HR?`)) {
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/admin/unassign-students', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        studentIds: [studentId]
-                    })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    alert('✅ ' + data.message);
-                    await loadStudents(); // Reload students
-                    loadHRs();
-                } else {
-                    alert('❌ Error: ' + data.error);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred');
-            }
-        }
-
-        // Filter HRs
         function filterHRs() {
             const searchInput = document.getElementById('searchInput').value.toLowerCase();
             
@@ -749,12 +814,10 @@
             displayHRs(filtered);
         }
 
-        // View HR details
         function viewHR(hrId) {
             window.location.href = `/secure-admin-panel/wapl/hr/${hrId}`;
         }
 
-        // Delete HR
         async function deleteHR(hrId, hrName) {
             if (!confirm(`🗑️ Are you sure you want to delete HR "${hrName}"?\n\nThis action cannot be undone.`)) return;
             
@@ -777,18 +840,15 @@
             }
         }
 
-        // Open create HR modal
         function openCreateHRModal() {
             document.getElementById('createHRModal').style.display = 'block';
         }
 
-        // Close create HR modal
         function closeCreateHRModal() {
             document.getElementById('createHRModal').style.display = 'none';
             document.getElementById('createHRForm').reset();
         }
 
-        // Create HR form submission
         document.getElementById('createHRForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -828,7 +888,6 @@
             }
         });
 
-        // Format date
         function formatDate(dateString) {
             if (!dateString) return 'N/A';
             const date = new Date(dateString);
@@ -839,7 +898,6 @@
             });
         }
 
-        // Close modal when clicking outside
         window.onclick = function(event) {
             const modal = document.getElementById('createHRModal');
             if (event.target == modal) {
@@ -847,11 +905,9 @@
             }
         }
 
-        // Initialize - Load students first, then HRs
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
             checkSuperAdmin();
-            await loadStudents();
-            await loadHRs();
+            loadHRs();
         });
     </script>
 </body>
