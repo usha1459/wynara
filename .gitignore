@@ -1,7 +1,63 @@
+@"
+# Python
 __pycache__/
+*.py[cod]
 *.pyc
-wapl.db
-flask_session/
-uploads/
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Virtual Environments
 venv/
+venv_clean/
+venv_deploy/
+venv_test/
+env/
+ENV/
+
+# Flask
+flask_session/
+instance/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment Variables
 .env
+.env.local
+
+# Uploads (user files)
+uploads/
+*.pdf
+*.jpg
+*.jpeg
+*.png
+
+# Old files
+requirements_old.txt
+
+# Test files
+test_*.py
+check_*.py
+fix_*.py
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+"@ | Out-File -FilePath .gitignore -Encoding UTF8
+
+# View it
+Get-Content .gitignore
